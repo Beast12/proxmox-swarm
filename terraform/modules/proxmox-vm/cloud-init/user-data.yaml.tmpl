@@ -1,0 +1,26 @@
+#cloud-config
+hostname: ${hostname}
+manage_etc_hosts: true
+
+users:
+  - name: ubuntu
+    groups: [sudo, docker]
+    shell: /bin/bash
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    ssh_authorized_keys:
+%{ for k in split("\n", ssh_public_keys) ~}
+      - ${k}
+%{ endfor ~}
+
+package_update: true
+packages:
+  - qemu-guest-agent
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+
+runcmd:
+  - systemctl enable --now qemu-guest-agent
+  - curl -fsSL https://get.docker.com | sh
+  - systemctl enable --now docker

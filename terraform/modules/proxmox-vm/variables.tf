@@ -15,6 +15,7 @@ variable "gateway" { type = string }
 variable "dns" { type = list(string) }
 
 variable "ssh_public_keys" { type = list(string) }
+variable "password_hash" { type = string }
 
 variable "tags" {
   type    = list(string)

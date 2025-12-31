@@ -3,7 +3,7 @@ locals {
   name_pfx = "pve-${local.env}"
 
   tags_common = [
-    "managed-by=terraform",
-    "env=${local.env}",
+    "managed-by-terraform",
+    "env-${local.env}",
   ]
 }

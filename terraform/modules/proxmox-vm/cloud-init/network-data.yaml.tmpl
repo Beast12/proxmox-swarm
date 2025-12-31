@@ -1,6 +1,8 @@
 version: 2
 ethernets:
-  eth0:
+  lan0:
+    match:
+      name: "e*"
     dhcp4: false
     addresses:
       - ${ip}/24

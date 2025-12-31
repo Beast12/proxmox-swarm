@@ -20,7 +20,7 @@ module "swarm_manager_vms" {
   dns     = var.lan_dns
 
   ssh_public_keys = var.ssh_public_keys
-  tags            = concat(local.tags_common, ["role=swarm-manager"])
+  tags            = concat(local.tags_common, ["role-swarm-manager"])
 }
 
 module "swarm_worker_vms" {
@@ -44,7 +44,7 @@ module "swarm_worker_vms" {
   dns     = var.lan_dns
 
   ssh_public_keys = var.ssh_public_keys
-  tags            = concat(local.tags_common, ["role=swarm-worker"])
+  tags            = concat(local.tags_common, ["role-swarm-worker"])
 }
 
 module "edge_lxcs" {
@@ -65,5 +65,5 @@ module "edge_lxcs" {
   gateway = var.lan_gateway
   dns     = var.lan_dns
 
-  tags = concat(local.tags_common, ["role=edge"])
+  tags = concat(local.tags_common, ["role-edge"])
 }

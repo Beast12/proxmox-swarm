@@ -55,6 +55,11 @@ variable "ssh_public_keys" {
   type        = list(string)
 }
 
+variable "vm_password_hash" {
+  description = "SHA-512 password hash for the cloud-init user."
+  type        = string
+}
+
 variable "swarm_managers" {
   description = "Swarm manager VM definitions."
   type = map(object({

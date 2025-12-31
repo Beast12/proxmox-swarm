@@ -3,14 +3,19 @@ hostname: ${hostname}
 manage_etc_hosts: true
 
 users:
-  - name: ubuntu
+  - name: koen
     groups: [sudo, docker]
     shell: /bin/bash
     sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    lock_passwd: false
+    passwd: ${password_hash}
     ssh_authorized_keys:
 %{ for k in split("\n", ssh_public_keys) ~}
       - ${k}
 %{ endfor ~}
+
+chpasswd:
+  expire: false
 
 package_update: true
 packages:
@@ -19,8 +24,13 @@ packages:
   - curl
   - gnupg
   - lsb-release
+  - jq
+  - vim
+  - git
+  - htop
 
 runcmd:
   - systemctl enable --now qemu-guest-agent
-  - curl -fsSL https://get.docker.com | sh
+  - curl -fsSL https://get.docker.com -o /root/get-docker.sh
+  - sh /root/get-docker.sh
   - systemctl enable --now docker

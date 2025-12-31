@@ -17,6 +17,7 @@ resource "proxmox_virtual_environment_file" "user_data" {
       hostname        = var.name
       ssh_public_keys = local.ssh_keys_joined
       dns_servers     = local.dns_joined
+      password_hash   = var.password_hash
     })
   }
 }
@@ -58,7 +59,7 @@ resource "proxmox_virtual_environment_vm" "this" {
   disk {
     datastore_id = var.datastore
     interface    = "scsi0"
-    size         = "${var.disk_gb}G"
+    size         = var.disk_gb
     iothread     = true
   file_id = var.cloud_image_file_id
 

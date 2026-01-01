@@ -19,11 +19,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik-certificates:/letsencrypt
 
-    environment:
-      - CF_DNS_API_TOKEN_FILE=/run/secrets/cf_dns_api_token
-
     secrets:
-      - cf_dns_api_token
       - dashboard_users_traefik
 
     command:
@@ -107,7 +103,5 @@ volumes:
     driver: local
 
 secrets:
-  cf_dns_api_token:
-    external: true
   dashboard_users_traefik:
     external: true

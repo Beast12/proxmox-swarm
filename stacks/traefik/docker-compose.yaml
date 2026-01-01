@@ -40,6 +40,7 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=10"
 
       # Uncomment for testing to avoid rate limits
       # - "--certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
@@ -86,6 +87,8 @@ services:
         - "traefik.http.routers.dashboard.entrypoints=websecure"
         - "traefik.http.routers.dashboard.service=api@internal"
         - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.dashboard.tls.domains[0].main=${DOMAIN}"
+        - "traefik.http.routers.dashboard.tls.domains[0].sans=*.${DOMAIN}"
 
         # Dashboard Authentication
         - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/run/secrets/dashboard_users_traefik"

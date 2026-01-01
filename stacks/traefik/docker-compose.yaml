@@ -24,7 +24,7 @@ services:
 
     secrets:
       - cf_dns_api_token
-      - dashboard_users
+      - dashboard_users_traefik
 
     command:
       # Entrypoints

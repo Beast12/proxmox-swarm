@@ -1,0 +1,28 @@
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    environment:
+      WEBSOCKET_ENABLED: "true"
+      ADMIN_TOKEN_FILE: /run/secrets/vaultwarden_admin_token
+      DOMAIN_FILE: /run/secrets/vaultwarden_domain
+    secrets:
+      - vaultwarden_admin_token
+      - vaultwarden_domain
+    volumes:
+      - vaultwarden_data:/data
+    ports:
+      - "8080:80"
+
+volumes:
+  vaultwarden_data:
+    driver: local
+
+secrets:
+  vaultwarden_admin_token:
+    external: true
+  vaultwarden_domain:
+    external: true

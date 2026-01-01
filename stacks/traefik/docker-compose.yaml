@@ -20,7 +20,7 @@ services:
       - traefik-certificates:/letsencrypt
 
     environment:
-      - CLOUDFLARE_DNS_API_TOKEN_FILE=/run/secrets/cf_dns_api_token
+      - CF_DNS_API_TOKEN_FILE=/run/secrets/cf_dns_api_token
 
     secrets:
       - cf_dns_api_token

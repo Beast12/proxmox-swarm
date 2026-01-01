@@ -88,7 +88,7 @@ services:
         - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
 
         # Dashboard Authentication
-        - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/run/secrets/dashboard_users"
+        - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/run/secrets/dashboard_users_traefik"
         - "traefik.http.routers.dashboard.middlewares=dashboard-auth@swarm"
 
         # Required for Swarm - specify port for the API
@@ -106,5 +106,5 @@ volumes:
 secrets:
   cf_dns_api_token:
     external: true
-  dashboard_users:
+  dashboard_users_traefik:
     external: true

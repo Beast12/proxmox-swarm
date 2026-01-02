@@ -14,6 +14,10 @@ services:
         published: 443
         protocol: tcp
         mode: host
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host
     environment:
       - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
       - CF_API_EMAIL=${CF_API_EMAIL}
@@ -52,6 +56,7 @@ services:
 
       # Dashboard
       - "--api.dashboard=true"
+      - "--api.insecure=true"
 
       # Logging
       - "--log.level=${LOG_LEVEL:-INFO}"
@@ -62,6 +67,10 @@ services:
       # Metrics
       - "--metrics.prometheus=true"
       - "--metrics.prometheus.addRoutersLabels=true"
+
+      # Load Balancing
+      - "--ping=true"
+      - "--ping.entrypoint=traefik"
 
     deploy:
       mode: replicated

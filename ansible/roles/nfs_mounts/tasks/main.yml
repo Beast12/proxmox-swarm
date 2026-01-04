@@ -43,6 +43,16 @@
   loop: "{{ nfs_shares }}"
   failed_when: not mount_check.stat.exists
 
+- name: Set ownership and permissions on NFS mounts for Docker
+  ansible.builtin.file:
+    path: "{{ item.local_path }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0775') }}"
+    state: directory
+  loop: "{{ nfs_shares }}"
+  ignore_errors: yes
+
 - name: Create .mounted marker files
   ansible.builtin.file:
     path: "{{ item.local_path }}/.mounted"

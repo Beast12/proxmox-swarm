@@ -154,8 +154,8 @@ volumes:
   postgres_backups:
     driver: local
     driver_opts:
-      type: nfs
-      o: addr=192.168.10.10,rw,soft,nolock
-      device: ":/nfs/postgres-backups"
+      type: none
+      o: bind
+      device: /mnt/nfs/postgres-backups
   pgadmin_data:
     driver: local

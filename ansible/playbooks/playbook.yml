@@ -16,6 +16,9 @@
         remote_path: /volume1/postgresql_backups
         local_path: /mnt/postgres-backups
         options: "rw,sync,hard,intr,timeo=600,retrans=5"
+        owner: "999" # Postgres user UID
+        group: "999" # Postgres group GID
+        mode: "0775"
 
   roles:
     - nfs_mounts

@@ -1,0 +1,5 @@
+# Default network driver for swarm
+default_network_driver: overlay
+
+# Default network scope
+default_network_scope: swarm

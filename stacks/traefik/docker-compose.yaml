@@ -108,8 +108,7 @@ services:
 
 networks:
   traefik_public:
-    driver: overlay
-    attachable: true
+    external: true
 
 volumes:
   traefik-certificates:

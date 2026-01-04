@@ -1,0 +1,60 @@
+# roles/docker_networks/tasks/main.yml
+---
+- name: Ensure Docker Python module is installed
+  ansible.builtin.pip:
+    name:
+      - docker
+      - requests
+    state: present
+    break_system_packages: yes
+
+- name: Create Docker networks
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    driver: "{{ item.driver | default(default_network_driver) }}"
+    scope: "{{ item.scope | default(default_network_scope) }}"
+    attachable: "{{ item.attachable | default(true) }}"
+    internal: "{{ item.internal | default(false) }}"
+    driver_options: "{{ item.options | default({}) }}"
+    state: "{{ item.state | default('present') }}"
+  loop: "{{ docker_networks }}"
+  when:
+    - item.state | default('present') == 'present'
+    - inventory_hostname == groups['swarm_managers'][0] # Only run on first manager
+  run_once: true
+
+- name: Remove Docker networks
+  community.docker.docker_network:
+    name: "{{ item.name }}"
+    state: absent
+    force: yes
+  loop: "{{ docker_networks }}"
+  when:
+    - item.state is defined
+    - item.state == 'absent'
+    - inventory_hostname == groups['swarm_managers'][0]
+  run_once: true
+
+- name: Verify networks exist
+  community.docker.docker_network_info:
+    name: "{{ item.name }}"
+  loop: "{{ docker_networks }}"
+  register: network_info
+  when:
+    - item.state | default('present') == 'present'
+    - inventory_hostname == groups['swarm_managers'][0]
+  run_once: true
+  failed_when: false
+
+- name: Display network information
+  ansible.builtin.debug:
+    msg: |
+      Network: {{ item.item.name }}
+      Driver: {{ item.network.Driver | default('N/A') }}
+      Scope: {{ item.network.Scope | default('N/A') }}
+      Created: {{ 'Yes' if item.network is defined else 'No' }}
+  loop: "{{ network_info.results }}"
+  when:
+    - network_info.results is defined
+    - inventory_hostname == groups['swarm_managers'][0]
+  run_once: true

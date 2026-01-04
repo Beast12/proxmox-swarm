@@ -20,6 +20,37 @@
         group: "999" # Postgres group GID
         mode: "0775"
 
+    docker_networks:
+      # Public-facing network for Traefik
+      - name: traefik_public
+        driver: overlay
+        attachable: true
+        state: present
+        options:
+          encrypted: "true"
+
+      # Monitoring stack network
+      - name: monitoring
+        driver: overlay
+        attachable: true
+        state: present
+        options:
+          encrypted: "false"
+
+      - name: monitoring
+        driver: overlay
+        attachable: true
+        state: present
+        options:
+          encrypted: "false"
+
+      - name: postgres_network
+        driver: overlay
+        attachable: true
+        state: present
+        options:
+          encrypted: "true"
+
   roles:
     - nfs_mounts
 

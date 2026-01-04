@@ -102,7 +102,7 @@ services:
     image: dpage/pgadmin4:latest
     hostname: pgadmin
     environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@tuxito.be
+      - PGADMIN_DEFAULT_EMAIL=vanoppen.koen@gmail.com
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
       - PGADMIN_CONFIG_SERVER_MODE=True
       - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False

@@ -65,6 +65,6 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /mnt/nfs/postgres-backups
+      device: /mnt/postgres-backups
   pgadmin_data:
     driver: local

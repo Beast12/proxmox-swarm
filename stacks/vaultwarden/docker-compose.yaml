@@ -32,7 +32,6 @@ services:
 networks:
   traefik_public:
     external: true
-    name: traefik_traefik_public
 
 volumes:
   vaultwarden_data:

@@ -1,12 +1,26 @@
 # roles/docker_networks/tasks/main.yml
 ---
-- name: Ensure Docker Python module is installed
+- name: Install Python packaging module
+  ansible.builtin.apt:
+    name:
+      - python3-packaging
+    state: present
+    update_cache: yes
+
+- name: Ensure pip is installed
+  ansible.builtin.apt:
+    name:
+      - python3-pip
+    state: present
+
+- name: Install Docker Python modules
   ansible.builtin.pip:
     name:
       - docker
       - requests
     state: present
     break_system_packages: yes
+  when: inventory_hostname == groups['swarm_managers'][0]
 
 - name: Create Docker networks
   community.docker.docker_network:
@@ -20,7 +34,7 @@
   loop: "{{ docker_networks }}"
   when:
     - item.state | default('present') == 'present'
-    - inventory_hostname == groups['swarm_managers'][0] # Only run on first manager
+    - inventory_hostname == groups['swarm_managers'][0]
   run_once: true
 
 - name: Remove Docker networks

@@ -20,37 +20,6 @@
         group: "999" # Postgres group GID
         mode: "0775"
 
-    docker_networks:
-      # Public-facing network for Traefik
-      - name: traefik_public
-        driver: overlay
-        attachable: true
-        state: present
-        options:
-          encrypted: "true"
-
-      # Monitoring stack network
-      - name: monitoring
-        driver: overlay
-        attachable: true
-        state: present
-        options:
-          encrypted: "false"
-
-      - name: monitoring
-        driver: overlay
-        attachable: true
-        state: present
-        options:
-          encrypted: "false"
-
-      - name: postgres_network
-        driver: overlay
-        attachable: true
-        state: present
-        options:
-          encrypted: "true"
-
   roles:
     - nfs_mounts
 
@@ -87,6 +56,39 @@
         msg: "Keepalived is active on {{ inventory_hostname }}"
       when: keepalived_check is succeeded
 
+- name: Create Docker Networks (Swarm Managers)
+  hosts: swarm_managers
+  become: yes
+
+  vars:
+    docker_networks:
+      # Public-facing network for Traefik
+      - name: traefik_public
+        driver: overlay
+        attachable: true
+        state: present
+        options:
+          encrypted: "true"
+
+      # Monitoring stack network
+      - name: monitoring
+        driver: overlay
+        attachable: true
+        state: present
+        options:
+          encrypted: "false"
+
+      # PostgreSQL network
+      - name: postgres_network
+        driver: overlay
+        attachable: true
+        state: present
+        options:
+          encrypted: "true"
+
+  roles:
+    - docker_networks
+
 # =============================================================================
 # SWARM WORKERS ONLY - OPTIONAL CONFIGURATIONS
 # =============================================================================
@@ -116,6 +118,12 @@
       register: nfs_status
       changed_when: false
 
+    - name: Check Docker networks (managers only)
+      ansible.builtin.shell: "docker network ls --filter scope=swarm"
+      register: docker_networks_status
+      changed_when: false
+      when: inventory_hostname in groups['swarm_managers']
+
     - name: Check Keepalived VIP (managers only)
       ansible.builtin.shell: "ip addr show | grep {{ keepalived_vip }} || echo 'VIP not on this node'"
       register: vip_status
@@ -133,6 +141,9 @@
           {{ nfs_status.stdout }}
 
           {% if inventory_hostname in groups['swarm_managers'] %}
+          Docker Networks:
+          {{ docker_networks_status.stdout }}
+
           Keepalived VIP Status:
           {{ vip_status.stdout }}
           {% endif %}

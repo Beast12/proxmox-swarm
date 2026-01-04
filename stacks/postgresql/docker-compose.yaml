@@ -56,7 +56,6 @@ networks:
     attachable: true
   traefik_public:
     external: true
-    name: traefik_traefik_public
 
 volumes:
   postgres_data:

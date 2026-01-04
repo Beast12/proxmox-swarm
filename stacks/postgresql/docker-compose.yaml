@@ -1,0 +1,161 @@
+version: "3.8"
+
+services:
+  postgres-primary:
+    image: bitnami/postgresql:16
+    hostname: postgres-primary
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=replicator
+      - POSTGRESQL_REPLICATION_PASSWORD=${POSTGRES_REPL_PASSWORD}
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=${POSTGRES_ADMIN_PASSWORD}
+      - POSTGRESQL_DATABASE=postgres
+      - POSTGRESQL_NUM_SYNCHRONOUS_REPLICAS=1
+      - POSTGRESQL_WAL_LEVEL=replica
+    volumes:
+      - postgres_primary_data:/bitnami/postgresql
+      - postgres_backups:/backups
+    networks:
+      - postgres_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.postgres.primary == true
+      restart_policy:
+        condition: on-failure
+
+  postgres-replica1:
+    image: bitnami/postgresql:16
+    hostname: postgres-replica1
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=replicator
+      - POSTGRESQL_REPLICATION_PASSWORD=${POSTGRES_REPL_PASSWORD}
+      - POSTGRESQL_MASTER_HOST=postgres-primary
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+      - POSTGRESQL_PASSWORD=${POSTGRES_ADMIN_PASSWORD}
+    volumes:
+      - postgres_replica1_data:/bitnami/postgresql
+    networks:
+      - postgres_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.postgres.replica1 == true
+      restart_policy:
+        condition: on-failure
+
+  postgres-replica2:
+    image: bitnami/postgresql:16
+    hostname: postgres-replica2
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=replicator
+      - POSTGRESQL_REPLICATION_PASSWORD=${POSTGRES_REPL_PASSWORD}
+      - POSTGRESQL_MASTER_HOST=postgres-primary
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+      - POSTGRESQL_PASSWORD=${POSTGRES_ADMIN_PASSWORD}
+    volumes:
+      - postgres_replica2_data:/bitnami/postgresql
+    networks:
+      - postgres_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.postgres.replica2 == true
+      restart_policy:
+        condition: on-failure
+
+  pgpool:
+    image: bitnami/pgpool:4
+    hostname: pgpool
+    environment:
+      - PGPOOL_BACKEND_NODES=0:postgres-primary:5432,1:postgres-replica1:5432,2:postgres-replica2:5432
+      - PGPOOL_SR_CHECK_USER=postgres
+      - PGPOOL_SR_CHECK_PASSWORD=${POSTGRES_ADMIN_PASSWORD}
+      - PGPOOL_POSTGRES_USERNAME=postgres
+      - PGPOOL_POSTGRES_PASSWORD=${POSTGRES_ADMIN_PASSWORD}
+      - PGPOOL_ADMIN_USERNAME=pgpool_admin
+      - PGPOOL_ADMIN_PASSWORD=${PGPOOL_ADMIN_PASSWORD}
+      - PGPOOL_ENABLE_LOAD_BALANCING=yes
+      - PGPOOL_NUM_INIT_CHILDREN=32
+      - PGPOOL_MAX_POOL=4
+    networks:
+      - postgres_network
+      - traefik_public
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.tcp.routers.postgres.rule=HostSNI(`*`)"
+        - "traefik.tcp.routers.postgres.entrypoints=postgres"
+        - "traefik.tcp.routers.postgres.service=postgres"
+        - "traefik.tcp.services.postgres.loadbalancer.server.port=5432"
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    hostname: pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@tuxito.be
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+      - PGADMIN_CONFIG_SERVER_MODE=True
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - postgres_network
+      - traefik_public
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.tuxito.be`)"
+        - "traefik.http.routers.pgadmin.entrypoints=websecure"
+        - "traefik.http.routers.pgadmin.tls=true"
+        - "traefik.http.routers.pgadmin.tls.certresolver=cloudflare"
+        - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    environment:
+      - DATA_SOURCE_NAME=postgresql://postgres:${POSTGRES_ADMIN_PASSWORD}@pgpool:5432/postgres?sslmode=disable
+    networks:
+      - postgres_network
+      - monitoring
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+networks:
+  postgres_network:
+    driver: overlay
+    attachable: true
+  traefik_public:
+    external: true
+  monitoring:
+    external: true
+
+volumes:
+  postgres_primary_data:
+    driver: local
+  postgres_replica1_data:
+    driver: local
+  postgres_replica2_data:
+    driver: local
+  postgres_backups:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=192.168.10.10,rw,soft,nolock
+      device: ":/nfs/postgres-backups"
+  pgadmin_data:
+    driver: local

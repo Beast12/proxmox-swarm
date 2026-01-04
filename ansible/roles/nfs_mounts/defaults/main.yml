@@ -1,0 +1,23 @@
+# roles/nfs_mounts/defaults/main.yml
+---
+# NFS server configuration
+nfs_server: "192.168.10.10" # Your Synology IP
+
+# NFS shares to mount
+nfs_shares:
+  - name: docker_volumes
+    remote_path: /volume1/docker/volumes
+    local_path: /mnt/nfs/docker-volumes
+    options: "rw,sync,hard,intr"
+  - name: traefik_config
+    remote_path: /volume1/docker/traefik
+    local_path: /mnt/nfs/traefik
+    options: "rw,sync,hard,intr"
+  - name: portainer_data
+    remote_path: /volume1/docker/portainer
+    local_path: /mnt/nfs/portainer
+    options: "rw,sync,hard,intr"
+
+# NFS mount options (can be overridden per share)
+nfs_default_options: "rw,sync,hard,intr"
+nfs_version: "4"

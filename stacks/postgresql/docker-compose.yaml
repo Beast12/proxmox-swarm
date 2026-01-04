@@ -141,6 +141,7 @@ networks:
     attachable: true
   traefik_public:
     external: true
+    name: traefik_traefik_public
   monitoring:
     external: true
 

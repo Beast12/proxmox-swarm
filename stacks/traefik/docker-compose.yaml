@@ -14,10 +14,11 @@ services:
         published: 443
         protocol: tcp
         mode: host
-      - target: 8080
-        published: 8081
+      - target: 5432
+        published: 5432
         protocol: tcp
         mode: host
+
     environment:
       - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
       - CF_API_EMAIL=${CF_API_EMAIL}
@@ -35,6 +36,7 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
       - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.postgres.address=:5432"
 
       # Let's Encrypt with Cloudflare DNS Challenge
       - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
@@ -56,7 +58,6 @@ services:
 
       # Dashboard
       - "--api.dashboard=true"
-      - "--api.insecure=true"
 
       # Logging
       - "--log.level=${LOG_LEVEL:-INFO}"

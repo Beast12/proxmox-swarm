@@ -1,0 +1,132 @@
+---
+# Manage Prometheus exporter user via docker exec
+
+- name: Ensure exporter password is set
+  ansible.builtin.fail:
+    msg: "postgresql_exporter_password must be set when postgresql_enable_exporter_user is true"
+  when: postgresql_exporter_password | default('') == ''
+
+- name: Find PostgreSQL container by service label
+  ansible.builtin.command:
+    argv:
+      - docker
+      - ps
+      - -q
+      - --filter
+      - "label=com.docker.swarm.service.name={{ postgresql_docker_service_name }}"
+  register: postgresql_container_by_label
+  changed_when: false
+
+- name: Find PostgreSQL container by name filter
+  ansible.builtin.command:
+    argv:
+      - docker
+      - ps
+      - -q
+      - --filter
+      - "name={{ postgresql_docker_service_name }}"
+  register: postgresql_container_by_name
+  changed_when: false
+  when: postgresql_container_by_label.stdout | trim == ""
+
+- name: Set PostgreSQL container ID
+  ansible.builtin.set_fact:
+    postgresql_container_id: >-
+      {{ (postgresql_container_by_label.stdout | trim)
+         if (postgresql_container_by_label.stdout | trim) != ""
+         else (postgresql_container_by_name.stdout | trim) }}
+  when: postgresql_container_by_label is defined
+  no_log: true
+
+- name: Fail if PostgreSQL container is not found
+  ansible.builtin.fail:
+    msg: "PostgreSQL container not found for service/name '{{ postgresql_docker_service_name }}'"
+  when: postgresql_container_id | default('') | trim == ""
+
+- name: Check Prometheus exporter user exists
+  ansible.builtin.command:
+    argv:
+      - docker
+      - exec
+      - -e
+      - "PGPASSWORD={{ postgresql_admin_password }}"
+      - "{{ postgresql_container_id }}"
+      - psql
+      - -U
+      - "{{ postgresql_admin_user }}"
+      - -tAc
+      - "SELECT 1 FROM pg_roles WHERE rolname='{{ postgresql_exporter_user }}';"
+  register: postgresql_exporter_user_check
+  changed_when: false
+  no_log: true
+
+- name: Create Prometheus exporter user
+  ansible.builtin.command:
+    argv:
+      - docker
+      - exec
+      - -e
+      - "PGPASSWORD={{ postgresql_admin_password }}"
+      - "{{ postgresql_container_id }}"
+      - psql
+      - -U
+      - "{{ postgresql_admin_user }}"
+      - -v
+      - ON_ERROR_STOP=1
+      - -c
+      - "CREATE ROLE \"{{ postgresql_exporter_user }}\" LOGIN PASSWORD '{{ postgresql_exporter_password }}';"
+  when: postgresql_exporter_user_check.stdout | trim == ""
+  no_log: true
+
+- name: Update Prometheus exporter user password
+  ansible.builtin.command:
+    argv:
+      - docker
+      - exec
+      - -e
+      - "PGPASSWORD={{ postgresql_admin_password }}"
+      - "{{ postgresql_container_id }}"
+      - psql
+      - -U
+      - "{{ postgresql_admin_user }}"
+      - -v
+      - ON_ERROR_STOP=1
+      - -c
+      - "ALTER ROLE \"{{ postgresql_exporter_user }}\" PASSWORD '{{ postgresql_exporter_password }}';"
+  when: postgresql_update_passwords | default(true)
+  changed_when: true
+  no_log: true
+
+- name: Ensure Prometheus exporter user can connect
+  ansible.builtin.command:
+    argv:
+      - docker
+      - exec
+      - -e
+      - "PGPASSWORD={{ postgresql_admin_password }}"
+      - "{{ postgresql_container_id }}"
+      - psql
+      - -U
+      - "{{ postgresql_admin_user }}"
+      - -v
+      - ON_ERROR_STOP=1
+      - -c
+      - "GRANT CONNECT ON DATABASE \"{{ postgresql_exporter_database }}\" TO \"{{ postgresql_exporter_user }}\";"
+  no_log: true
+
+- name: Grant pg_monitor to Prometheus exporter user
+  ansible.builtin.command:
+    argv:
+      - docker
+      - exec
+      - -e
+      - "PGPASSWORD={{ postgresql_admin_password }}"
+      - "{{ postgresql_container_id }}"
+      - psql
+      - -U
+      - "{{ postgresql_admin_user }}"
+      - -v
+      - ON_ERROR_STOP=1
+      - -c
+      - "GRANT pg_monitor TO \"{{ postgresql_exporter_user }}\";"
+  no_log: true

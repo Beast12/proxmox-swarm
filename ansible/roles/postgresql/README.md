@@ -7,6 +7,7 @@ This role manages users and databases in an **existing** PostgreSQL instance (Do
 Key features:
 - Creates databases and users
 - Retrieves passwords from Bitwarden at runtime
+- Manages extensions, exporter user, and optional config files
 - Works with Docker Compose PostgreSQL containers
 - Works with remote PostgreSQL servers
 - Secure password handling with `no_log: true`
@@ -121,6 +122,15 @@ ansible-playbook -i inventory site.yml --tags postgresql
 | `postgresql_admin_user` | `postgres` | Admin user for creating databases/users |
 | `postgresql_admin_password` | (required) | Admin password |
 | `postgresql_wait_for_ready` | `true` | Wait for PostgreSQL to be ready |
+| `postgresql_connection_mode` | `tcp` | `tcp` or `docker_exec` |
+| `postgresql_manage_extensions` | `true` | Manage PostgreSQL extensions |
+| `postgresql_extensions` | (list) | Extensions to install |
+| `postgresql_extensions_ignore_missing` | `false` | Ignore missing extensions in the image |
+| `postgresql_enable_exporter_user` | `true` | Create Prometheus exporter user |
+| `postgresql_exporter_user` | `postgres_exporter` | Exporter username |
+| `postgresql_exporter_password` | (required) | Exporter password |
+| `postgresql_manage_configs` | `true` | Manage postgresql.conf and pg_hba.conf |
+| `postgresql_config_dir` | `/mnt/postgres-config` | Config file directory on host |
 
 ### User Configuration
 

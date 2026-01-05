@@ -7,8 +7,69 @@
     host: "{{ postgresql_host }}"
     port: "{{ postgresql_port }}"
     timeout: 30
-  when: postgresql_wait_for_ready | default(true)
+  when:
+    - postgresql_wait_for_ready | default(true)
+    - postgresql_connection_mode | default('tcp') == 'tcp'
+
+- name: Resolve PostgreSQL user passwords
+  ansible.builtin.set_fact:
+    postgresql_users_resolved: >-
+      {{ (postgresql_users_resolved | default([])) + [item | combine({'password': resolved_password})] }}
+  vars:
+    resolved_password: >-
+      {{ item.password | default(lookup('bitwarden', item.bitwarden_item | default(item.name ~ ' Database'))) }}
+  loop: "{{ postgresql_users }}"
+  when: postgresql_users is defined
+  no_log: true
+
+- name: Determine extension target databases
+  ansible.builtin.set_fact:
+    postgresql_extension_databases_effective: >-
+      {{
+        (postgresql_extensions_databases | default([]) | length > 0)
+          | ternary(
+              postgresql_extensions_databases,
+              (((postgresql_users_resolved | default([])) | map(attribute='db') | select('defined') | list) + ['postgres']) | unique
+            )
+      }}
+  when: postgresql_manage_extensions | default(true)
+
+- name: Manage PostgreSQL config files
+  import_tasks: configs.yml
+  when: postgresql_manage_configs | default(false)
 
 - name: Manage PostgreSQL users and databases
   import_tasks: users.yml
-  when: postgresql_users is defined
+  when:
+    - postgresql_users is defined
+    - postgresql_connection_mode | default('tcp') == 'tcp'
+
+- name: Manage PostgreSQL users and databases (docker exec)
+  import_tasks: users_docker_exec.yml
+  when:
+    - postgresql_users is defined
+    - postgresql_connection_mode | default('tcp') == 'docker_exec'
+
+- name: Manage Prometheus exporter user
+  import_tasks: monitoring.yml
+  when:
+    - postgresql_enable_exporter_user | default(false)
+    - postgresql_connection_mode | default('tcp') == 'tcp'
+
+- name: Manage Prometheus exporter user (docker exec)
+  import_tasks: monitoring_docker_exec.yml
+  when:
+    - postgresql_enable_exporter_user | default(false)
+    - postgresql_connection_mode | default('tcp') == 'docker_exec'
+
+- name: Manage PostgreSQL extensions
+  import_tasks: extensions.yml
+  when:
+    - postgresql_manage_extensions | default(false)
+    - postgresql_connection_mode | default('tcp') == 'tcp'
+
+- name: Manage PostgreSQL extensions (docker exec)
+  import_tasks: extensions_docker_exec.yml
+  when:
+    - postgresql_manage_extensions | default(false)
+    - postgresql_connection_mode | default('tcp') == 'docker_exec'

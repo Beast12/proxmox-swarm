@@ -1,0 +1,23 @@
+# Managed by Ansible
+
+# "local" is for Unix domain socket connections only
+local   all             all                                     trust
+
+# IPv4/IPv6 local connections
+host    all             all             127.0.0.1/32            scram-sha-256
+host    all             all             ::1/128                 scram-sha-256
+
+{% for subnet in postgresql_hba_allow_subnets | default([]) %}
+host    all             all             {{ subnet }}            scram-sha-256
+{% endfor %}
+
+{% if postgresql_hba_allow_all | default(false) %}
+host    all             all             0.0.0.0/0               scram-sha-256
+host    all             all             ::0/0                   scram-sha-256
+{% endif %}
+
+{% if postgresql_enable_exporter_user | default(false) %}
+{% for subnet in postgresql_hba_monitoring_subnets | default([]) %}
+host    all             {{ postgresql_exporter_user }}          {{ subnet }}            scram-sha-256
+{% endfor %}
+{% endif %}

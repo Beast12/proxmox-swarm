@@ -10,7 +10,7 @@
     login_port: "{{ postgresql_port }}"
     login_user: "{{ postgresql_admin_user }}"
     login_password: "{{ postgresql_admin_password }}"
-  loop: "{{ postgresql_users }}"
+  loop: "{{ postgresql_users_resolved }}"
   when: item.db is defined
   no_log: true
 
@@ -24,7 +24,7 @@
     login_port: "{{ postgresql_port }}"
     login_user: "{{ postgresql_admin_user }}"
     login_password: "{{ postgresql_admin_password }}"
-  loop: "{{ postgresql_users }}"
+  loop: "{{ postgresql_users_resolved }}"
   no_log: true
 
 - name: Grant ALL privileges to users on their databases
@@ -38,6 +38,6 @@
     login_port: "{{ postgresql_port }}"
     login_user: "{{ postgresql_admin_user }}"
     login_password: "{{ postgresql_admin_password }}"
-  loop: "{{ postgresql_users }}"
+  loop: "{{ postgresql_users_resolved }}"
   when: item.db is defined
   no_log: true

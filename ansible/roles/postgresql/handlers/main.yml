@@ -1,0 +1,25 @@
+---
+- name: Reload PostgreSQL (tcp)
+  community.postgresql.postgresql_query:
+    db: "{{ postgresql_admin_database | default('postgres') }}"
+    query: "SELECT pg_reload_conf();"
+    login_host: "{{ postgresql_host }}"
+    login_port: "{{ postgresql_port }}"
+    login_user: "{{ postgresql_admin_user }}"
+    login_password: "{{ postgresql_admin_password }}"
+  when: postgresql_connection_mode | default('tcp') == 'tcp'
+
+- name: Reload PostgreSQL (docker exec)
+  ansible.builtin.shell: |
+    set -o pipefail
+    container_id=$(docker ps -q --filter "label=com.docker.swarm.service.name={{ postgresql_docker_service_name }}" | head -n 1)
+    if [ -z "$container_id" ]; then
+      container_id=$(docker ps -q --filter "name={{ postgresql_docker_service_name }}" | head -n 1)
+    fi
+    if [ -n "$container_id" ]; then
+      docker exec -e PGPASSWORD={{ postgresql_admin_password }} "$container_id" \
+        psql -U {{ postgresql_admin_user }} -d {{ postgresql_admin_database | default('postgres') }} -c "SELECT pg_reload_conf();"
+    fi
+  args:
+    executable: /bin/bash
+  when: postgresql_connection_mode | default('tcp') == 'docker_exec'

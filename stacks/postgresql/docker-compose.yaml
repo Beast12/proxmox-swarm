@@ -2,15 +2,29 @@ version: "3.8"
 
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgis/postgis:17-3.4
     hostname: postgres
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_ADMIN_PASSWORD}
       - POSTGRES_DB=postgres
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - hba_file=/etc/postgresql/pg_hba.conf
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - postgres_backups:/backups
+      - type: bind
+        source: /mnt/postgres-config/postgresql.conf
+        target: /etc/postgresql/postgresql.conf
+        read_only: true
+      - type: bind
+        source: /mnt/postgres-config/pg_hba.conf
+        target: /etc/postgresql/pg_hba.conf
+        read_only: true
     networks:
       - postgres_network
       - traefik_public
@@ -18,12 +32,28 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == swarm-worker-w2
       labels:
         - "traefik.enable=true"
         - "traefik.tcp.routers.postgres.rule=HostSNI(`*`)"
         - "traefik.tcp.routers.postgres.entrypoints=postgres"
         - "traefik.tcp.routers.postgres.service=postgres"
         - "traefik.tcp.services.postgres.loadbalancer.server.port=5432"
+
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    hostname: postgres-exporter
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_EXPORTER_USER}:${POSTGRES_EXPORTER_PASSWORD}@postgres:5432/postgres?sslmode=disable
+    networks:
+      - postgres_network
+      - monitoring
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -59,6 +89,8 @@ networks:
     driver: overlay
     attachable: true
   traefik_public:
+    external: true
+  monitoring:
     external: true
 
 volumes:

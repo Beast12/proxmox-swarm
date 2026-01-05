@@ -1,0 +1,10 @@
+# Managed by Ansible
+
+listen_addresses = '*'
+port = 5432
+
+password_encryption = scram-sha-256
+
+# Useful for Prometheus exporters
+shared_preload_libraries = 'pg_stat_statements'
+pg_stat_statements.track = all

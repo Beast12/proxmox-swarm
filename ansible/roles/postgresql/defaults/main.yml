@@ -1,0 +1,13 @@
+---
+# Connection details for PostgreSQL (Docker or remote)
+postgresql_host: "localhost"
+postgresql_port: 5432
+postgresql_admin_user: "postgres"
+postgresql_admin_password: "" # Should be set in inventory or vault
+
+# Wait for PostgreSQL to be ready before running tasks
+postgresql_wait_for_ready: true
+
+# Users and databases configuration
+# Passwords are retrieved from Bitwarden using the lookup plugin
+postgresql_users: []

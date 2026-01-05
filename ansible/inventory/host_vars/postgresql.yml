@@ -1,0 +1,49 @@
+---
+# Example inventory configuration for PostgreSQL in Docker Compose
+
+# Connection to your PostgreSQL Docker container
+postgresql_host: "localhost" # or IP of your Docker host
+postgresql_port: 5432
+
+# Admin credentials for PostgreSQL
+# Option 1: From Bitwarden
+postgresql_admin_user: "postgres"
+postgresql_admin_password: "{{ lookup('bitwarden', 'PostgreSQL Admin') }}"
+
+# Database users with Bitwarden lookups
+postgresql_users:
+  - name: nextcloud
+    password: "{{ lookup('bitwarden', 'Nextcloud Database') }}"
+    db: nextcloud
+
+  - name: docmost
+    password: "{{ lookup('bitwarden', 'DocMost Database') }}"
+    db: docmost
+
+  - name: paperless
+    password: "{{ lookup('bitwarden', 'Paperless Database') }}"
+    db: paperless
+
+  - name: penpot
+    password: "{{ lookup('bitwarden', 'Penpot Database') }}"
+    db: penpot
+
+  - name: n8n
+    password: "{{ lookup('bitwarden', 'n8n Database') }}"
+    db: n8n
+
+  - name: skyvern
+    password: "{{ lookup('bitwarden', 'Skyvern Database') }}"
+    db: skyvern
+
+  - name: adventurelog
+    password: "{{ lookup('bitwarden', 'AdventureLog Database') }}"
+    db: adventurelog
+
+  - name: immich
+    password: "{{ lookup('bitwarden', 'Immich Database') }}"
+    db: immich
+
+  - name: authentik
+    password: "{{ lookup('bitwarden', 'Authentik Database') }}"
+    db: authentik

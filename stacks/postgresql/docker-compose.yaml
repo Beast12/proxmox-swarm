@@ -33,6 +33,7 @@ services:
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
       - PGADMIN_CONFIG_SERVER_MODE=True
       - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+      - SCRIPT_NAME=/pgadmin
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:
@@ -49,7 +50,10 @@ services:
         - "traefik.http.routers.pgadmin.tls=true"
         - "traefik.http.routers.pgadmin.tls.certresolver=letsencrypt"
         - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
-
+        - "traefik.docker.network=traefik_public"
+        # Middleware for X-Script-Name header
+        - "traefik.http.middlewares.pgadmin-headers.headers.customrequestheaders.X-Script-Name=/pgadmin"
+        - "traefik.http.routers.pgadmin.middlewares=pgadmin-headers"
 networks:
   postgres_network:
     driver: overlay

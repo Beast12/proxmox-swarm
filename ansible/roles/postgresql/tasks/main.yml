@@ -1,0 +1,14 @@
+---
+# This role manages users and databases in an existing PostgreSQL instance
+# It does NOT install PostgreSQL - assumes it's already running (Docker or otherwise)
+
+- name: Wait for PostgreSQL to be ready
+  wait_for:
+    host: "{{ postgresql_host }}"
+    port: "{{ postgresql_port }}"
+    timeout: 30
+  when: postgresql_wait_for_ready | default(true)
+
+- name: Manage PostgreSQL users and databases
+  import_tasks: users.yml
+  when: postgresql_users is defined

@@ -1,0 +1,23 @@
+---
+# Example playbook for managing PostgreSQL users in Docker
+
+- name: Configure PostgreSQL databases and users
+  hosts: localhost # Run locally against Docker PostgreSQL
+  connection: local
+  gather_facts: false
+
+  vars_files:
+    - inventory/host_vars/postgresql.yml # Your inventory with connection details
+
+  roles:
+    - postgresql
+# Alternative: Run against remote Docker host
+# - name: Configure PostgreSQL databases and users
+#   hosts: docker_host
+#   gather_facts: false
+#
+#   vars_files:
+#     - inventory/host_vars/postgresql.yml
+#
+#   roles:
+#     - postgresql

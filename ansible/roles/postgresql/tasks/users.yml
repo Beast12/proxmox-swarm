@@ -1,0 +1,43 @@
+---
+# Connect to PostgreSQL (Docker or remote) and manage users/databases
+# Connection details come from inventory variables
+
+- name: Ensure PostgreSQL databases exist
+  community.postgresql.postgresql_db:
+    name: "{{ item.db }}"
+    state: present
+    login_host: "{{ postgresql_host }}"
+    login_port: "{{ postgresql_port }}"
+    login_user: "{{ postgresql_admin_user }}"
+    login_password: "{{ postgresql_admin_password }}"
+  loop: "{{ postgresql_users }}"
+  when: item.db is defined
+  no_log: true
+
+- name: Ensure PostgreSQL users exist
+  community.postgresql.postgresql_user:
+    name: "{{ item.name }}"
+    password: "{{ item.password }}"
+    role_attr_flags: LOGIN
+    state: present
+    login_host: "{{ postgresql_host }}"
+    login_port: "{{ postgresql_port }}"
+    login_user: "{{ postgresql_admin_user }}"
+    login_password: "{{ postgresql_admin_password }}"
+  loop: "{{ postgresql_users }}"
+  no_log: true
+
+- name: Grant ALL privileges to users on their databases
+  community.postgresql.postgresql_privs:
+    type: database
+    database: "{{ item.db }}"
+    roles: "{{ item.name }}"
+    privs: ALL
+    state: present
+    login_host: "{{ postgresql_host }}"
+    login_port: "{{ postgresql_port }}"
+    login_user: "{{ postgresql_admin_user }}"
+    login_password: "{{ postgresql_admin_password }}"
+  loop: "{{ postgresql_users }}"
+  when: item.db is defined
+  no_log: true

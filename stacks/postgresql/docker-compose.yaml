@@ -47,6 +47,13 @@ services:
     hostname: postgres-exporter
     environment:
       - DATA_SOURCE_NAME=postgresql://${POSTGRES_EXPORTER_USER}:${POSTGRES_EXPORTER_PASSWORD}@postgres:5432/postgres?sslmode=disable
+    command:
+      - --config.file=/etc/postgres_exporter.yml
+    volumes:
+      - type: bind
+        source: /mnt/postgres-config/postgres_exporter.yml
+        target: /etc/postgres_exporter.yml
+        read_only: true
     networks:
       - postgres_network
       - monitoring

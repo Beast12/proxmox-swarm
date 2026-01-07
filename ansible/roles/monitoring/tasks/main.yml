@@ -17,6 +17,11 @@
     - "{{ monitoring_nfs_root }}/config/pve-exporter"
     - "{{ monitoring_nfs_root }}/config/loki"
     - "{{ monitoring_nfs_root }}/config/snmp"
+    - "{{ monitoring_nfs_root }}/data"
+    - "{{ monitoring_nfs_root }}/data/prometheus"
+    - "{{ monitoring_nfs_root }}/data/alertmanager"
+    - "{{ monitoring_nfs_root }}/data/grafana"
+    - "{{ monitoring_nfs_root }}/data/loki"
     - "{{ monitoring_nfs_root }}/secrets"
 
 - name: Copy monitoring config files to shared storage

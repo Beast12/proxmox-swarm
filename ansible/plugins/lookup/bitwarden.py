@@ -20,6 +20,12 @@ class LookupModule(LookupBase):
         return results
 
     def _get_password(self, term, session):
+        try:
+            subprocess.check_output(["bw", "sync", "--session", session], text=True)
+        except subprocess.CalledProcessError:
+            # Best-effort sync; continue with cached data.
+            pass
+
         cmd = ["bw", "list", "items", "--search", term, "--session", session]
         try:
             output = subprocess.check_output(cmd, text=True)

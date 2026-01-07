@@ -29,6 +29,8 @@ postgresql_enable_exporter_user: true
 postgresql_exporter_user: "postgres_exporter"
 postgresql_exporter_password: ""
 postgresql_exporter_database: "postgres"
+postgresql_exporter_config_name: "postgres_exporter.yml"
+postgresql_manage_exporter_config: true
 
 # Config management
 postgresql_manage_configs: true

@@ -1,0 +1,176 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    security_opt:
+      - apparmor:unconfined
+    ports:
+      - "9090:9090"
+    volumes:
+      - /mnt/proxmox_swarm_data/monitoring/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - /mnt/proxmox_swarm_data/monitoring/config/prometheus/rules:/etc/prometheus/rules:ro
+      - /mnt/proxmox_swarm_data/monitoring/secrets/home_assistant_token:/run/secrets/home_assistant_token:ro
+      - ./prometheus/data:/prometheus:rw
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--storage.tsdb.retention.size=50GB"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--web.enable-lifecycle"
+      - "--web.enable-admin-api"
+    labels:
+      - "homepage.group=Monitoring"
+      - "homepage.name=Prometheus"
+      - "homepage.icon=prometheus.png"
+      - "homepage.href=https://prometheus.tuxito.be"
+      - "homepage.description=Metrics Collection & Storage"
+    depends_on:
+      - pve-exporter
+      - cadvisor
+      - alertmanager
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    restart: unless-stopped
+    security_opt:
+      - apparmor:unconfined
+    ports:
+      - "9093:9093"
+    volumes:
+      - /mnt/proxmox_swarm_data/monitoring/config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./alertmanager/data:/alertmanager:rw
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+      - "--web.external-url=https://alertmanager.tuxito.be"
+      - "--cluster.listen-address="
+    labels:
+      - "homepage.group=Monitoring"
+      - "homepage.name=Alertmanager"
+      - "homepage.icon=prometheus.png"
+      - "homepage.href=https://alertmanager.tuxito.be"
+      - "homepage.description=Alert Management & Routing"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    security_opt:
+      - apparmor:unconfined
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel,grafana-clock-panel
+    volumes:
+      - ./grafana/data:/var/lib/grafana:rw
+      - /mnt/proxmox_swarm_data/monitoring/config/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+      - /mnt/proxmox_swarm_data/monitoring/config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - /mnt/proxmox_swarm_data/monitoring/secrets/home_assistant_token:/run/secrets/home_assistant_token:ro
+    labels:
+      - "homepage.group=Monitoring"
+      - "homepage.name=Grafana"
+      - "homepage.icon=grafana.png"
+      - "homepage.href=https://grafana.tuxito.be"
+      - "homepage.description=Monitoring Dashboards"
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: unless-stopped
+    security_opt:
+      - apparmor:unconfined
+    ports:
+      - "3100:3100"
+    volumes:
+      - /mnt/proxmox_swarm_data/monitoring/config/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - ./loki/data:/loki:rw
+    command: -config.file=/etc/loki/local-config.yaml
+    labels:
+      - "homepage.group=Monitoring"
+      - "homepage.name=Loki"
+      - "homepage.icon=grafana-loki.png"
+      - "homepage.href=http://monitoring.lan:3100"
+      - "homepage.description=Log Aggregation"
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    restart: unless-stopped
+    security_opt:
+      - apparmor:unconfined
+    ports:
+      - "9080:9080"
+      - "514:1514/udp"
+    volumes:
+      - /mnt/proxmox_swarm_data/monitoring/config/promtail-config/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/config.yml
+    labels:
+      - "homepage.group=Monitoring"
+      - "homepage.name=Promtail"
+      - "homepage.icon=grafana-loki.png"
+      - "homepage.href=http://monitoring.lan:9080"
+      - "homepage.description=Log Collection Agent"
+
+  pve-exporter:
+    image: prompve/prometheus-pve-exporter:latest
+    container_name: pve-exporter
+    restart: unless-stopped
+    security_opt:
+      - apparmor:unconfined
+    ports:
+      - "9221:9221"
+    volumes:
+      - /mnt/proxmox_swarm_data/monitoring/config/pve-exporter/pve.yml:/etc/pve.yml:ro
+    command: --config.file=/etc/pve.yml --collector.status --collector.version --web.listen-address=:9221
+    labels:
+      - "homepage.group=Monitoring"
+      - "homepage.name=PVE Exporter"
+      - "homepage.icon=proxmox.png"
+      - "homepage.href=http://monitoring.lan:9221"
+      - "homepage.description=Proxmox Metrics Exporter"
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    restart: unless-stopped
+    security_opt:
+      - apparmor:unconfined
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    labels:
+      - "homepage.group=Monitoring"
+      - "homepage.name=cAdvisor"
+      - "homepage.icon=cadvisor.png"
+      - "homepage.href=http://monitoring.lan:8080"
+      - "homepage.description=Container Resource Monitoring"
+
+  snmp-exporter:
+    image: prom/snmp-exporter:v0.29.0
+    container_name: snmp-exporter
+    restart: unless-stopped
+    security_opt:
+      - apparmor:unconfined
+    ports:
+      - "9116:9116"
+    volumes:
+      - /mnt/proxmox_swarm_data/monitoring/config/snmp/snmp.yml:/etc/snmp_exporter/snmp.yml:ro
+    command: "--config.file=/etc/snmp_exporter/snmp.yml"
+    labels:
+      - "homepage.group=Monitoring"
+      - "homepage.name=SNMP Exporter"
+      - "homepage.icon=prometheus.png"
+      - "homepage.href=http://monitoring.lan:9116"
+      - "homepage.description=SNMP to Prometheus"

@@ -133,6 +133,7 @@ if [ -z "${BW_SESSION:-}" ]; then
         exit 1
     fi
     
+    bw sync --session "$BW_SESSION" >/dev/null 2>&1 || true
     echo "✓ Bitwarden unlocked"
 else
     echo "✓ Bitwarden session already active"

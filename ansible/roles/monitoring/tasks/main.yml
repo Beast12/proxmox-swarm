@@ -1,0 +1,76 @@
+---
+- name: Ensure monitoring config directories exist on shared storage
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0775"
+  loop:
+    - "{{ monitoring_nfs_root }}"
+    - "{{ monitoring_nfs_root }}/config"
+    - "{{ monitoring_nfs_root }}/config/prometheus"
+    - "{{ monitoring_nfs_root }}/config/prometheus/rules"
+    - "{{ monitoring_nfs_root }}/config/alertmanager"
+    - "{{ monitoring_nfs_root }}/config/promtail-config"
+    - "{{ monitoring_nfs_root }}/config/grafana"
+    - "{{ monitoring_nfs_root }}/config/pve-exporter"
+    - "{{ monitoring_nfs_root }}/config/loki"
+    - "{{ monitoring_nfs_root }}/config/snmp"
+    - "{{ monitoring_nfs_root }}/secrets"
+
+- name: Copy monitoring config files to shared storage
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - src: "{{ monitoring_config_src_root }}/prometheus/prometheus.yml"
+      dest: "{{ monitoring_nfs_root }}/config/prometheus/prometheus.yml"
+    - src: "{{ monitoring_config_src_root }}/prometheus/rules/alerts.yml"
+      dest: "{{ monitoring_nfs_root }}/config/prometheus/rules/alerts.yml"
+    - src: "{{ monitoring_config_src_root }}/alertmanager/alertmanager.yml"
+      dest: "{{ monitoring_nfs_root }}/config/alertmanager/alertmanager.yml"
+    - src: "{{ monitoring_config_src_root }}/promtail-config/promtail-config.yml"
+      dest: "{{ monitoring_nfs_root }}/config/promtail-config/promtail-config.yml"
+    - src: "{{ monitoring_config_src_root }}/grafana/datasources.yml"
+      dest: "{{ monitoring_nfs_root }}/config/grafana/datasources.yml"
+    - src: "{{ monitoring_config_src_root }}/loki/loki-config.yml"
+      dest: "{{ monitoring_nfs_root }}/config/loki/loki-config.yml"
+
+- name: Render Grafana config with Vaultwarden secrets
+  ansible.builtin.template:
+    src: "grafana.ini.j2"
+    dest: "{{ monitoring_nfs_root }}/config/grafana/grafana.ini"
+    owner: root
+    group: root
+    mode: "0640"
+
+- name: Render PVE exporter config with Vaultwarden secrets
+  ansible.builtin.template:
+    src: "pve.yml.j2"
+    dest: "{{ monitoring_nfs_root }}/config/pve-exporter/pve.yml"
+    owner: root
+    group: root
+    mode: "0640"
+
+- name: Copy SNMP exporter config to shared storage
+  ansible.builtin.copy:
+    src: "{{ monitoring_config_src_root }}/snmp/snmp.yml"
+    dest: "{{ monitoring_nfs_root }}/config/snmp/snmp.yml"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Write monitoring secret files from Vaultwarden
+  ansible.builtin.copy:
+    dest: "{{ monitoring_nfs_root }}/secrets/{{ item.name }}"
+    content: "{{ item.value }}"
+    owner: root
+    group: root
+    mode: "0600"
+  loop:
+    - name: home_assistant_token
+      value: "{{ monitoring_secrets.home_assistant_token }}"

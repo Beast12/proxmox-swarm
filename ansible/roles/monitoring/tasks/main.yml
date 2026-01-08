@@ -59,7 +59,7 @@
     dest: "{{ monitoring_nfs_root }}/config/prometheus/prometheus.yml"
     owner: root
     group: root
-    mode: "0640"
+    mode: "0644"
 
 - name: Render Grafana datasources with Vaultwarden secrets
   ansible.builtin.template:

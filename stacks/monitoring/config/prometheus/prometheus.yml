@@ -35,8 +35,6 @@ scrape_configs:
         target_label: __param_target
       - source_labels: [__param_target]
         target_label: instance
-      - target_label: __address__
-        replacement: monitoring.lan:9221
         # Add friendly names
       - source_labels: [instance]
         regex: "192.168.10.11"
@@ -96,8 +94,6 @@ scrape_configs:
 
   # Docker containers monitoring (cAdvisor)
   - job_name: "cadvisor"
-    static_configs:
-      - targets: ["monitoring.lan:8080"]
     scrape_interval: 30s
 
   - job_name: "tplink-switch"

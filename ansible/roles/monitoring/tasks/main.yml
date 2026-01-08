@@ -83,7 +83,7 @@
     dest: "{{ monitoring_nfs_root }}/config/pve-exporter/pve.yml"
     owner: root
     group: root
-    mode: "0640"
+    mode: "0644"
 
 - name: Copy SNMP exporter config to shared storage
   ansible.builtin.copy:

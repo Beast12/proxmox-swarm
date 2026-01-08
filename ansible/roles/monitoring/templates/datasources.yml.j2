@@ -21,9 +21,6 @@ datasources:
   - name: Home Assistant
     type: prometheus
     access: proxy
-    url: http://192.168.10.28:8123/api/prometheus
+    url: http://prometheus:9090
     basicAuth: false
     editable: true
-    httpHeaderName1: "Authorization"
-    secureJsonData:
-      httpHeaderValue1: "Bearer {{ monitoring_secrets.home_assistant_grafana_token }}"

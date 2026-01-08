@@ -61,6 +61,13 @@
         msg: "Keepalived is active on {{ inventory_hostname }}"
       when: keepalived_check is succeeded
 
+- name: Deploy Authentik env file to shared storage
+  hosts: swarm_managers
+  become: yes
+
+  roles:
+    - authentik_env
+
 - name: Deploy Monitoring Config to Shared Storage
   hosts: swarm_managers
   become: yes

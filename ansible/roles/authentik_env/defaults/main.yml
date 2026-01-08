@@ -1,0 +1,14 @@
+---
+authentik_env_dir: /mnt/proxmox_swarm_data/env-files
+authentik_env_file: "{{ authentik_env_dir }}/authentik.env"
+authentik_env:
+  AUTHENTIK_POSTGRESQL__HOST: postgres
+  AUTHENTIK_POSTGRESQL__PORT: "5432"
+  AUTHENTIK_POSTGRESQL__NAME: authentik
+  AUTHENTIK_POSTGRESQL__USER: authentik
+  AUTHENTIK_POSTGRESQL__PASSWORD: "{{ lookup('bitwarden', 'Authentik Database') }}"
+  AUTHENTIK_REDIS__HOST: valkey.lan
+  AUTHENTIK_REDIS__PORT: "6379"
+  AUTHENTIK_REDIS__DB: "5"
+  AUTHENTIK_REDIS__PASSWORD: "{{ lookup('bitwarden', 'Valkey Database') }}"
+  AUTHENTIK_SECRET_KEY: "{{ lookup('bitwarden', 'Authentik Secret Key') }}"

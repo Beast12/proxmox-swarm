@@ -1,0 +1,46 @@
+services:
+  server:
+    image: ghcr.io/goauthentik/server:2025.8.4
+    container_name: authentik_server
+    restart: unless-stopped
+    security_opt:
+      - apparmor:unconfined
+    command: server
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/authentik.env
+    networks:
+      - postgres_network
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+    volumes:
+      - /mnt/proxmox_swarm_data/authentik/media:/media
+      - /mnt/proxmox_swarm_data/authentik/custom-templates:/templates
+    labels:
+      - "homepage.group=Infrastructure"
+      - "homepage.name=Authentik"
+      - "homepage.icon=authentik.png"
+      - "homepage.href=https://auth.tuxito.be"
+      - "homepage.description=SSO & Identity Provider"
+
+  worker:
+    image: ghcr.io/goauthentik/server:2025.8.4
+    container_name: authentik_worker
+    restart: unless-stopped
+    security_opt:
+      - apparmor:unconfined
+    command: worker
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/authentik.env
+    networks:
+      - postgres_network
+    user: root
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /mnt/proxmox_swarm_data/authentik/media:/media
+      - /mnt/proxmox_swarm_data/authentik/certs:/certs
+      - /mnt/proxmox_swarm_data/authentik/custom-templates:/templates
+
+networks:
+  postgres_network:
+    external: true

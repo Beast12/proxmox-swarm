@@ -4,5 +4,6 @@ monitoring_config_src_root: "{{ playbook_dir }}/../../stacks/monitoring/config"
 monitoring_secrets:
   grafana_admin_password: "{{ lookup('bitwarden', 'Grafana Admin') }}"
   grafana_oauth_client_secret: "{{ lookup('bitwarden', 'Grafana Auth Client Secret') }}"
+  home_assistant_grafana_token: "{{ lookup('bitwarden', 'Home Assistant Grafana Token') }}"
   home_assistant_token: "{{ lookup('bitwarden', 'Proxmox_swarm_ha_token') }}"
   pve_token: "{{ lookup('bitwarden', 'Proxmox Monitoring User') }}"

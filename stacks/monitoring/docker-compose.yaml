@@ -95,7 +95,6 @@ services:
       - /mnt/proxmox_swarm_data/monitoring/data/grafana:/var/lib/grafana:rw
       - /mnt/proxmox_swarm_data/monitoring/config/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
       - /mnt/proxmox_swarm_data/monitoring/config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
-      - /mnt/proxmox_swarm_data/monitoring/secrets/home_assistant_token:/run/secrets/home_assistant_token:ro
     deploy:
       mode: replicated
       replicas: 1

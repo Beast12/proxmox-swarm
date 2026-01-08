@@ -40,10 +40,16 @@
       dest: "{{ monitoring_nfs_root }}/config/alertmanager/alertmanager.yml"
     - src: "{{ monitoring_config_src_root }}/promtail-config/promtail-config.yml"
       dest: "{{ monitoring_nfs_root }}/config/promtail-config/promtail-config.yml"
-    - src: "{{ monitoring_config_src_root }}/grafana/datasources.yml"
-      dest: "{{ monitoring_nfs_root }}/config/grafana/datasources.yml"
     - src: "{{ monitoring_config_src_root }}/loki/loki-config.yml"
       dest: "{{ monitoring_nfs_root }}/config/loki/loki-config.yml"
+
+- name: Render Grafana datasources with Vaultwarden secrets
+  ansible.builtin.template:
+    src: "datasources.yml.j2"
+    dest: "{{ monitoring_nfs_root }}/config/grafana/datasources.yml"
+    owner: root
+    group: root
+    mode: "0640"
 
 - name: Render Grafana config with Vaultwarden secrets
   ansible.builtin.template:

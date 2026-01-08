@@ -1,12 +1,12 @@
 services:
   prometheus:
     image: prom/prometheus:latest
-    container_name: prometheus
     restart: unless-stopped
     security_opt:
       - apparmor:unconfined
-    ports:
-      - "9090:9090"
+    networks:
+      - monitoring
+      - traefik_public
     volumes:
       - /mnt/proxmox_swarm_data/monitoring/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - /mnt/proxmox_swarm_data/monitoring/config/prometheus/rules:/etc/prometheus/rules:ro
@@ -21,12 +21,25 @@ services:
       - "--web.console.templates=/usr/share/prometheus/consoles"
       - "--web.enable-lifecycle"
       - "--web.enable-admin-api"
-    labels:
-      - "homepage.group=Monitoring"
-      - "homepage.name=Prometheus"
-      - "homepage.icon=prometheus.png"
-      - "homepage.href=https://prometheus.tuxito.be"
-      - "homepage.description=Metrics Collection & Storage"
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Monitoring"
+        - "homepage.name=Prometheus"
+        - "homepage.icon=prometheus.png"
+        - "homepage.href=https://prometheus.tuxito.be"
+        - "homepage.description=Metrics Collection & Storage"
+        - "traefik.enable=true"
+        - "traefik.http.routers.prometheus.rule=Host(`prometheus.tuxito.be`)"
+        - "traefik.http.routers.prometheus.entrypoints=websecure"
+        - "traefik.http.routers.prometheus.tls.certresolver=letsencrypt"
+        - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+        - "traefik.docker.network=traefik_public"
     depends_on:
       - pve-exporter
       - cadvisor
@@ -34,12 +47,12 @@ services:
 
   alertmanager:
     image: prom/alertmanager:latest
-    container_name: alertmanager
     restart: unless-stopped
     security_opt:
       - apparmor:unconfined
-    ports:
-      - "9093:9093"
+    networks:
+      - monitoring
+      - traefik_public
     volumes:
       - /mnt/proxmox_swarm_data/monitoring/config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - /mnt/proxmox_swarm_data/monitoring/data/alertmanager:/alertmanager:rw
@@ -48,21 +61,34 @@ services:
       - "--storage.path=/alertmanager"
       - "--web.external-url=https://alertmanager.tuxito.be"
       - "--cluster.listen-address="
-    labels:
-      - "homepage.group=Monitoring"
-      - "homepage.name=Alertmanager"
-      - "homepage.icon=prometheus.png"
-      - "homepage.href=https://alertmanager.tuxito.be"
-      - "homepage.description=Alert Management & Routing"
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Monitoring"
+        - "homepage.name=Alertmanager"
+        - "homepage.icon=prometheus.png"
+        - "homepage.href=https://alertmanager.tuxito.be"
+        - "homepage.description=Alert Management & Routing"
+        - "traefik.enable=true"
+        - "traefik.http.routers.alertmanager.rule=Host(`alertmanager.tuxito.be`)"
+        - "traefik.http.routers.alertmanager.entrypoints=websecure"
+        - "traefik.http.routers.alertmanager.tls.certresolver=letsencrypt"
+        - "traefik.http.services.alertmanager.loadbalancer.server.port=9093"
+        - "traefik.docker.network=traefik_public"
 
   grafana:
     image: grafana/grafana:latest
-    container_name: grafana
     restart: unless-stopped
     security_opt:
       - apparmor:unconfined
-    ports:
-      - "3000:3000"
+    networks:
+      - monitoring
+      - traefik_public
     environment:
       - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel,grafana-clock-panel
     volumes:
@@ -70,107 +96,155 @@ services:
       - /mnt/proxmox_swarm_data/monitoring/config/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
       - /mnt/proxmox_swarm_data/monitoring/config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
       - /mnt/proxmox_swarm_data/monitoring/secrets/home_assistant_token:/run/secrets/home_assistant_token:ro
-    labels:
-      - "homepage.group=Monitoring"
-      - "homepage.name=Grafana"
-      - "homepage.icon=grafana.png"
-      - "homepage.href=https://grafana.tuxito.be"
-      - "homepage.description=Monitoring Dashboards"
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Monitoring"
+        - "homepage.name=Grafana"
+        - "homepage.icon=grafana.png"
+        - "homepage.href=https://grafana.tuxito.be"
+        - "homepage.description=Monitoring Dashboards"
+        - "traefik.enable=true"
+        - "traefik.http.routers.grafana.rule=Host(`grafana.tuxito.be`)"
+        - "traefik.http.routers.grafana.entrypoints=websecure"
+        - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
+        - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+        - "traefik.docker.network=traefik_public"
 
   loki:
     image: grafana/loki:latest
-    container_name: loki
     restart: unless-stopped
     security_opt:
       - apparmor:unconfined
-    ports:
-      - "3100:3100"
+    networks:
+      - monitoring
     volumes:
       - /mnt/proxmox_swarm_data/monitoring/config/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
       - /mnt/proxmox_swarm_data/monitoring/data/loki:/loki:rw
     command: -config.file=/etc/loki/local-config.yaml
-    labels:
-      - "homepage.group=Monitoring"
-      - "homepage.name=Loki"
-      - "homepage.icon=grafana-loki.png"
-      - "homepage.href=http://monitoring.lan:3100"
-      - "homepage.description=Log Aggregation"
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Monitoring"
+        - "homepage.name=Loki"
+        - "homepage.icon=grafana-loki.png"
+        - "homepage.href=http://monitoring.lan:3100"
+        - "homepage.description=Log Aggregation"
 
   promtail:
     image: grafana/promtail:latest
-    container_name: promtail
     restart: unless-stopped
     security_opt:
       - apparmor:unconfined
     ports:
-      - "9080:9080"
       - "514:1514/udp"
+    networks:
+      - monitoring
     volumes:
       - /mnt/proxmox_swarm_data/monitoring/config/promtail-config/promtail-config.yml:/etc/promtail/config.yml:ro
       - /var/log:/var/log:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     command: -config.file=/etc/promtail/config.yml
-    labels:
-      - "homepage.group=Monitoring"
-      - "homepage.name=Promtail"
-      - "homepage.icon=grafana-loki.png"
-      - "homepage.href=http://monitoring.lan:9080"
-      - "homepage.description=Log Collection Agent"
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Monitoring"
+        - "homepage.name=Promtail"
+        - "homepage.icon=grafana-loki.png"
+        - "homepage.href=http://monitoring.lan:9080"
+        - "homepage.description=Log Collection Agent"
 
   pve-exporter:
     image: prompve/prometheus-pve-exporter:latest
-    container_name: pve-exporter
     restart: unless-stopped
     security_opt:
       - apparmor:unconfined
-    ports:
-      - "9221:9221"
+    networks:
+      - monitoring
     volumes:
       - /mnt/proxmox_swarm_data/monitoring/config/pve-exporter/pve.yml:/etc/pve.yml:ro
     command: --config.file=/etc/pve.yml --collector.status --collector.version --web.listen-address=:9221
-    labels:
-      - "homepage.group=Monitoring"
-      - "homepage.name=PVE Exporter"
-      - "homepage.icon=proxmox.png"
-      - "homepage.href=http://monitoring.lan:9221"
-      - "homepage.description=Proxmox Metrics Exporter"
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Monitoring"
+        - "homepage.name=PVE Exporter"
+        - "homepage.icon=proxmox.png"
+        - "homepage.href=http://monitoring.lan:9221"
+        - "homepage.description=Proxmox Metrics Exporter"
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
-    container_name: cadvisor
     restart: unless-stopped
     security_opt:
       - apparmor:unconfined
-    ports:
-      - "8080:8080"
+    networks:
+      - monitoring
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
-    labels:
-      - "homepage.group=Monitoring"
-      - "homepage.name=cAdvisor"
-      - "homepage.icon=cadvisor.png"
-      - "homepage.href=http://monitoring.lan:8080"
-      - "homepage.description=Container Resource Monitoring"
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Monitoring"
+        - "homepage.name=cAdvisor"
+        - "homepage.icon=cadvisor.png"
+        - "homepage.href=http://monitoring.lan:8080"
+        - "homepage.description=Container Resource Monitoring"
 
   snmp-exporter:
     image: prom/snmp-exporter:v0.29.0
-    container_name: snmp-exporter
     restart: unless-stopped
     security_opt:
       - apparmor:unconfined
-    ports:
-      - "9116:9116"
+    networks:
+      - monitoring
     volumes:
       - /mnt/proxmox_swarm_data/monitoring/config/snmp/snmp.yml:/etc/snmp_exporter/snmp.yml:ro
     command: "--config.file=/etc/snmp_exporter/snmp.yml"
-    labels:
-      - "homepage.group=Monitoring"
-      - "homepage.name=SNMP Exporter"
-      - "homepage.icon=prometheus.png"
-      - "homepage.href=http://monitoring.lan:9116"
-      - "homepage.description=SNMP to Prometheus"
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Monitoring"
+        - "homepage.name=SNMP Exporter"
+        - "homepage.icon=prometheus.png"
+        - "homepage.href=http://monitoring.lan:9116"
+        - "homepage.description=SNMP to Prometheus"
+
+networks:
+  monitoring:
+    external: true
+  traefik_public:
+    external: true

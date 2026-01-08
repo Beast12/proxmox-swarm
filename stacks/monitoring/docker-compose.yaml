@@ -11,7 +11,6 @@ services:
     volumes:
       - /mnt/proxmox_swarm_data/monitoring/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - /mnt/proxmox_swarm_data/monitoring/config/prometheus/rules:/etc/prometheus/rules:ro
-      - /mnt/proxmox_swarm_data/monitoring/secrets/home_assistant_token:/run/secrets/home_assistant_token:ro
       - /mnt/proxmox_swarm_data/monitoring/data/prometheus:/prometheus:rw
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
@@ -200,6 +199,8 @@ services:
       - apparmor:unconfined
     networks:
       - monitoring
+    ports:
+      - "8080:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -218,6 +219,37 @@ services:
         - "homepage.icon=cadvisor.png"
         - "homepage.href=http://monitoring.lan:8080"
         - "homepage.description=Container Resource Monitoring"
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    security_opt:
+      - apparmor:unconfined
+    networks:
+      - monitoring
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+      - "--collector.filesystem.mount-points-exclude=^/(proc|sys|dev|run|var/lib/docker/.+)($$|/)"
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Monitoring"
+        - "homepage.name=Node Exporter"
+        - "homepage.icon=prometheus.png"
+        - "homepage.href=http://monitoring.lan:9100"
+        - "homepage.description=Node Exporter"
 
   snmp-exporter:
     image: prom/snmp-exporter:v0.29.0

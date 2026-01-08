@@ -59,25 +59,11 @@ scrape_configs:
         target_label: instance
         replacement: "proxmox-5"
 
-  # LXC Containers and Services (Node Exporter)
+  # Swarm node exporter (global)
   - job_name: "node-exporter"
     static_configs:
       - targets:
-          - "ai-services.lan:9100"
-          - "database-tools.lan:9100"
-          - "productivity.lan:9100"
-          - "nextcloud.lan:9100"
-          - "plex.lan:9100"
-          - "postgresql.lan:9100"
-          - "cloudflared.lan:9100"
-          - "authentik.lan:9100"
-          - "utilities.lan:9100"
-          - "changedetection.lan:9100"
-          - "development.lan:9100"
-          - "entertainment.lan:9100"
-          - "frigate.lan:9100"
-          - "homepage.lan:9100"
-          - "invoices.lan:9100"
+          - "tasks.node-exporter:9100"
     scrape_interval: 30s
     relabel_configs:
       - source_labels: [__address__]
@@ -89,7 +75,7 @@ scrape_configs:
   - job_name: "homeassistant"
     scrape_interval: 60s
     metrics_path: /api/prometheus
-    bearer_token: "__RENDERED_BY_ANSIBLE__"
+    bearer_token: "{{ monitoring_secrets.home_assistant_token }}"
     scheme: http
     static_configs:
       - targets: ["192.168.10.28:8123"]
@@ -97,7 +83,7 @@ scrape_configs:
   # Docker containers monitoring (cAdvisor)
   - job_name: "cadvisor"
     static_configs:
-      - targets: ["monitoring.lan:8080"]
+      - targets: ["tasks.cadvisor:8080"]
     scrape_interval: 30s
 
   - job_name: "tplink-switch"

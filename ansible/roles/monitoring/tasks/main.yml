@@ -29,6 +29,7 @@
     path: "{{ item }}"
     state: directory
     mode: "0777"
+    recurse: true
   loop:
     - "{{ monitoring_nfs_root }}/data/prometheus"
     - "{{ monitoring_nfs_root }}/data/alertmanager"
@@ -43,8 +44,6 @@
     group: root
     mode: "0644"
   loop:
-    - src: "{{ monitoring_config_src_root }}/prometheus/prometheus.yml"
-      dest: "{{ monitoring_nfs_root }}/config/prometheus/prometheus.yml"
     - src: "{{ monitoring_config_src_root }}/prometheus/rules/alerts.yml"
       dest: "{{ monitoring_nfs_root }}/config/prometheus/rules/alerts.yml"
     - src: "{{ monitoring_config_src_root }}/alertmanager/alertmanager.yml"
@@ -53,6 +52,14 @@
       dest: "{{ monitoring_nfs_root }}/config/promtail-config/promtail-config.yml"
     - src: "{{ monitoring_config_src_root }}/loki/loki-config.yml"
       dest: "{{ monitoring_nfs_root }}/config/loki/loki-config.yml"
+
+- name: Render Prometheus config with Vaultwarden secrets
+  ansible.builtin.template:
+    src: "prometheus.yml.j2"
+    dest: "{{ monitoring_nfs_root }}/config/prometheus/prometheus.yml"
+    owner: root
+    group: root
+    mode: "0640"
 
 - name: Render Grafana datasources with Vaultwarden secrets
   ansible.builtin.template:

@@ -24,6 +24,17 @@
     - "{{ monitoring_nfs_root }}/data/loki"
     - "{{ monitoring_nfs_root }}/secrets"
 
+- name: Ensure monitoring data directories are writable on NFS
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0777"
+  loop:
+    - "{{ monitoring_nfs_root }}/data/prometheus"
+    - "{{ monitoring_nfs_root }}/data/alertmanager"
+    - "{{ monitoring_nfs_root }}/data/grafana"
+    - "{{ monitoring_nfs_root }}/data/loki"
+
 - name: Copy monitoring config files to shared storage
   ansible.builtin.copy:
     src: "{{ item.src }}"

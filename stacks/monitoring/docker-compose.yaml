@@ -2,6 +2,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     restart: unless-stopped
+    user: "65534"
     security_opt:
       - apparmor:unconfined
     networks:

@@ -7,7 +7,7 @@ authentik_env:
   AUTHENTIK_POSTGRESQL__NAME: authentik
   AUTHENTIK_POSTGRESQL__USER: authentik
   AUTHENTIK_POSTGRESQL__PASSWORD: "{{ lookup('bitwarden', 'Authentik Database') }}"
-  AUTHENTIK_REDIS__HOST: valkey.lan
+  AUTHENTIK_REDIS__HOST: redis
   AUTHENTIK_REDIS__PORT: "6379"
   AUTHENTIK_REDIS__DB: "5"
   AUTHENTIK_REDIS__PASSWORD: "{{ lookup('bitwarden', 'Valkey Database') }}"

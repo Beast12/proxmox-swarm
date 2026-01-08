@@ -67,6 +67,7 @@
 
   roles:
     - authentik_env
+    - redis_service
 
 - name: Deploy Monitoring Config to Shared Storage
   hosts: swarm_managers
@@ -91,6 +92,14 @@
 
       # Monitoring stack network
       - name: monitoring
+        driver: overlay
+        attachable: true
+        state: present
+        options:
+          encrypted: "false"
+
+      # Shared services network
+      - name: services
         driver: overlay
         attachable: true
         state: present

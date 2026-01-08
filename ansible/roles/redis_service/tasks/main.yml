@@ -1,0 +1,35 @@
+---
+- name: Ensure Redis shared directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0775"
+  loop:
+    - "{{ redis_env_dir }}"
+    - "{{ redis_conf_dir }}"
+    - "{{ redis_data_dir }}"
+
+- name: Render Redis env file from Vaultwarden
+  ansible.builtin.template:
+    src: "redis.env.j2"
+    dest: "{{ redis_env_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Render Redis config file from Vaultwarden
+  ansible.builtin.template:
+    src: "redis.conf.j2"
+    dest: "{{ redis_conf_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure Redis data directory is writable on NFS
+  ansible.builtin.file:
+    path: "{{ redis_data_dir }}"
+    state: directory
+    mode: "0777"
+    recurse: true

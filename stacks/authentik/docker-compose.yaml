@@ -1,9 +1,6 @@
 services:
   authentik-proxy:
     image: ghcr.io/goauthentik/proxy
-    ports:
-      - "9000:9000"
-      - "9443:9443"
     environment:
       AUTHENTIK_HOST: https://server
       AUTHENTIK_INSECURE: "true"

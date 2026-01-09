@@ -1,6 +1,6 @@
 services:
   server:
-    image: ghcr.io/goauthentik/server:2025.8.4
+    image: ghcr.io/goauthentik/server:2025.10.3
     restart: unless-stopped
     user: "1000:1000"
     security_opt:
@@ -33,7 +33,7 @@ services:
         - "traefik.docker.network=traefik_public"
 
   worker:
-    image: ghcr.io/goauthentik/server:2025.8.4
+    image: ghcr.io/goauthentik/server:2025.10.3
     restart: unless-stopped
     security_opt:
       - apparmor:unconfined

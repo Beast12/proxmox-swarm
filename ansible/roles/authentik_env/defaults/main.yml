@@ -10,5 +10,5 @@ authentik_env:
   AUTHENTIK_REDIS__HOST: redis
   AUTHENTIK_REDIS__PORT: "6379"
   AUTHENTIK_REDIS__DB: "5"
-  AUTHENTIK_REDIS__PASSWORD: "{{ lookup('bitwarden', 'Valkey Database') }}"
+  AUTHENTIK_REDIS__PASSWORD: "{{ lookup('bitwarden', 'Redis Database') }}"
   AUTHENTIK_SECRET_KEY: "{{ lookup('bitwarden', 'Authentik Secret Key') }}"

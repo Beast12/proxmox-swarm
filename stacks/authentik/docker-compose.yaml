@@ -2,6 +2,7 @@ services:
   server:
     image: ghcr.io/goauthentik/server:2025.8.4
     restart: unless-stopped
+    user: "1000:1000"
     security_opt:
       - apparmor:unconfined
     command: server
@@ -40,7 +41,7 @@ services:
     networks:
       - postgres_network
       - services
-    user: root
+    user: "1000:1000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /mnt/proxmox_swarm_data/authentik/media:/media

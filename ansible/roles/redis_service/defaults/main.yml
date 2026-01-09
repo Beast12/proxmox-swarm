@@ -4,4 +4,4 @@ redis_env_file: "{{ redis_env_dir }}/redis.env"
 redis_conf_dir: /mnt/proxmox_swarm_data/services/redis
 redis_conf_file: "{{ redis_conf_dir }}/redis.conf"
 redis_data_dir: "{{ redis_conf_dir }}/data"
-redis_password: "{{ lookup('bitwarden', 'Valkey Database') }}"
+redis_password: "{{ lookup('bitwarden', 'Redis Database') }}"

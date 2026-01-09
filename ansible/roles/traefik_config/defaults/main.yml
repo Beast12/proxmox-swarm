@@ -1,0 +1,4 @@
+---
+traefik_config_root: /mnt/proxmox_swarm_data/traefik
+traefik_config_dir: "{{ traefik_config_root }}/config"
+traefik_config_src_root: "{{ playbook_dir }}/../../stacks/traefik/config"

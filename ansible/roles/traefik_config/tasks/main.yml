@@ -1,0 +1,20 @@
+---
+- name: Ensure Traefik config directories exist on shared storage
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0775"
+  loop:
+    - "{{ traefik_config_root }}"
+    - "{{ traefik_config_dir }}"
+
+- name: Copy Traefik config files to shared storage
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ traefik_config_dir }}/{{ item | basename }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ lookup('fileglob', traefik_config_src_root + '/*', wantlist=True) }}"

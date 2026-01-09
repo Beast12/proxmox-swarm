@@ -68,6 +68,7 @@
   roles:
     - authentik_env
     - redis_service
+    - traefik_config
 
 - name: Deploy Monitoring Config to Shared Storage
   hosts: swarm_managers

@@ -25,6 +25,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik-certificates:/letsencrypt
+      - /mnt/proxmox_swarm_data/traefik/config:/config:ro
 
     secrets:
       - dashboard_users_traefik
@@ -72,6 +73,9 @@ services:
       # Load Balancing
       - "--ping=true"
       - "--ping.entrypoint=traefik"
+      # Add file provider
+      - "--providers.file.directory=/config"
+      - "--providers.file.watch=true"
 
     deploy:
       mode: replicated

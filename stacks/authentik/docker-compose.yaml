@@ -8,9 +8,6 @@ services:
     networks:
       - postgres_network
       - services
-    ports:
-      - "9000:9000"
-      - "9443:9443"
     volumes:
       - /mnt/proxmox_swarm_data/authentik/media:/media
       - /mnt/proxmox_swarm_data/authentik/custom-templates:/templates

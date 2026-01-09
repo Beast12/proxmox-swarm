@@ -3,7 +3,6 @@ version: "3.8"
 services:
   postgres:
     image: postgis/postgis:17-3.4
-    hostname: postgres
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_ADMIN_PASSWORD}
@@ -44,7 +43,6 @@ services:
 
   postgres_exporter:
     image: prometheuscommunity/postgres-exporter:v0.15.0
-    hostname: postgres-exporter
     environment:
       - DATA_SOURCE_NAME=postgresql://${POSTGRES_EXPORTER_USER}:${POSTGRES_EXPORTER_PASSWORD}@postgres:5432/postgres?sslmode=disable
     command:
@@ -64,7 +62,6 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    hostname: pgadmin
     environment:
       - PGADMIN_DEFAULT_EMAIL=vanoppen.koen@gmail.com
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}

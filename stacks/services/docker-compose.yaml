@@ -4,8 +4,6 @@ services:
   redis:
     image: redis:7.2-alpine
     restart: unless-stopped
-    env_file:
-      - /mnt/proxmox_swarm_data/env-files/redis.env
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     volumes:
       - /mnt/proxmox_swarm_data/services/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro

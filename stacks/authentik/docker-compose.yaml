@@ -5,8 +5,6 @@ services:
     security_opt:
       - apparmor:unconfined
     command: server
-    env_file:
-      - /mnt/proxmox_swarm_data/env-files/authentik.env
     networks:
       - postgres_network
       - services
@@ -42,8 +40,6 @@ services:
     security_opt:
       - apparmor:unconfined
     command: worker
-    env_file:
-      - /mnt/proxmox_swarm_data/env-files/authentik.env
     networks:
       - postgres_network
       - services

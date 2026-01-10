@@ -16,8 +16,7 @@ services:
       - VERSION=docker
       - PLEX_CLAIM=claim-ti-wu-vvEZyUJhRRTaTa # Optional: Get from https://www.plex.tv/claim/
     volumes:
-      - /mnt/proxmox_swarm_data/plex/config:/config
-      - /mnt/proxmox_swarm_data/plex/transcode:/transcode
+      - plex_config:/config
       - /mnt/nfs/media-nas/movies:/media/movies
       - /mnt/nfs/media-nas/tv:/media/tv
       - /mnt/nfs/media-nas/music:/media/music
@@ -25,6 +24,8 @@ services:
       - /mnt/nfs/media-nas/comedy:/media/comedy
       - /mnt/nfs/media-nas/audiobooks:/media/audiobooks
       - /mnt/nfs/media-nas/comics:/media/comics
+    tmpfs:
+      - /transcode:rw,size=8g
     devices:
       - /dev/dri:/dev/dri # Intel Arc GPU passthrough for hardware transcoding
     deploy:
@@ -49,3 +50,7 @@ services:
         - "traefik.http.routers.plex.tls.certresolver=letsencrypt"
         - "traefik.http.services.plex.loadbalancer.server.port=32400"
         - "traefik.docker.network=traefik_public"
+
+volumes:
+  plex_config:
+    driver: local

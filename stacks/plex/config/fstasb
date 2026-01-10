@@ -1,0 +1,7 @@
+192.168.10.9:/volume1/Movies /mnt/nfs/media-nas/movies nfs defaults,nfsvers=3,rw 0 0
+192.168.10.9:/volume1/Series /mnt/nfs/media-nas/tv nfs defaults,nfsvers=3,rw 0 0
+192.168.10.9:/volume1/Music /mnt/nfs/media-nas/music nfs defaults,nfsvers=3,rw 0 0
+192.168.10.9:/volume1/Cartoons /mnt/nfs/media-nas/cartoons nfs defaults,nfsvers=3,rw 0 0
+192.168.10.9:/volume1/Comedy /mnt/nfs/media-nas/comedy nfs defaults,nfsvers=3,rw 0 0
+192.168.10.9:/volume1/Audiobooks /mnt/nfs/media-nas/audiobooks nfs defaults,nfsvers=3,rw 0 0
+192.168.10.9:/volume1/Comics /mnt/nfs/media-nas/comics nfs defaults,nfsvers=3,rw 0 0

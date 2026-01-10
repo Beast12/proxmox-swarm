@@ -1,0 +1,39 @@
+---
+- name: Read Plex NFS mount definitions
+  ansible.builtin.set_fact:
+    plex_mount_lines: >-
+      {{ lookup('file', plex_fstab_file).splitlines()
+         | reject('match', '^\\s*(#|$)')
+         | list }}
+
+- name: Build Plex mount list
+  ansible.builtin.set_fact:
+    plex_mounts: "{{ plex_mounts | default([]) + [mount_entry] }}"
+  vars:
+    parts: "{{ item.split() }}"
+    mount_entry:
+      src: "{{ parts[0] }}"
+      path: "{{ parts[1] }}"
+      fstype: "{{ parts[2] }}"
+      opts: "{{ parts[3] }}"
+      dump: "{{ parts[4] | int }}"
+      passno: "{{ parts[5] | int }}"
+  loop: "{{ plex_mount_lines }}"
+
+- name: Ensure Plex mount points exist
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0775"
+  loop: "{{ plex_mounts }}"
+
+- name: Mount Plex NFS shares
+  ansible.builtin.mount:
+    src: "{{ item.src }}"
+    path: "{{ item.path }}"
+    fstype: "{{ item.fstype }}"
+    opts: "{{ item.opts }}"
+    state: mounted
+  loop: "{{ plex_mounts }}"

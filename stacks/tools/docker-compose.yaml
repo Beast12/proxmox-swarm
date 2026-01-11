@@ -238,7 +238,6 @@ services:
       - NODE_ENV=production
       - DOCKER=true
       - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=${CRONMASTER_UPDATE_INTERVAL:-30000}
-      - HOST_PROJECT_DIR=${CRONMASTER_PROJECT_DIR:-/mnt/proxmox_swarm_data/cronmaster}
       - HOST_CRONTAB_USER=root
       - TZ=${TZ:-Europe/Brussels}
     volumes:

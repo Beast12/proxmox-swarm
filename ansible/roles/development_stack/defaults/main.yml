@@ -1,0 +1,12 @@
+---
+development_root: /mnt/proxmox_swarm_data/development-tools
+development_dirs:
+  - "{{ development_root }}/code-server/config"
+  - "{{ development_root }}/code-server/workspace"
+  - "{{ development_root }}/docker-registry/data"
+
+homeassistant_cifs:
+  src: "//192.168.10.28/config"
+  path: "/mnt/ha-config"
+  fstype: "cifs"
+  opts: "vers=3.0,sec=ntlmssp,credentials=/root/.smb-ha,uid=100000,gid=100000,file_mode=0777,dir_mode=0777,noperm,_netdev"

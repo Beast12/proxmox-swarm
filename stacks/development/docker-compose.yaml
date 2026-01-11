@@ -1,0 +1,83 @@
+version: "3.8"
+
+services:
+  code-server:
+    image: lscr.io/linuxserver/code-server:latest
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Development Tools"
+        - "homepage.name=Code Server"
+        - "homepage.icon=vscode.png"
+        - "homepage.href=https://code.tuxito.be"
+        - "homepage.description=VS Code in Browser"
+        - "traefik.enable=true"
+        - "traefik.http.routers.code-server.rule=Host(`code.tuxito.be`)"
+        - "traefik.http.routers.code-server.entrypoints=websecure"
+        - "traefik.http.routers.code-server.tls.certresolver=letsencrypt"
+        - "traefik.http.services.code-server.loadbalancer.server.port=8443"
+        - "traefik.docker.network=traefik_public"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Brussels}
+      - PASSWORD=${CODE_SERVER_PASSWORD}
+      - SUDO_PASSWORD=${CODE_SERVER_SUDO_PASSWORD}
+      - DEFAULT_WORKSPACE=${CODE_SERVER_WORKSPACE:-/workspace}
+      - PROXY_DOMAIN=${CODE_SERVER_PROXY_DOMAIN:-code.tuxito.be}
+    volumes:
+      - /mnt/proxmox_swarm_data/development-tools/code-server/config:/config:rw
+      - /mnt/proxmox_swarm_data/development-tools/code-server/workspace:/workspace:rw
+      - /mnt/ha-config:/config/workspace/homeassistant:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - traefik_public
+      - dev_internal
+
+  docker-registry:
+    image: registry:2.8.3
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Development Tools"
+        - "homepage.name=Docker Registry"
+        - "homepage.icon=docker.png"
+        - "homepage.href=https://registry.tuxito.be"
+        - "homepage.description=Private Docker Registry"
+        - "traefik.enable=true"
+        - "traefik.http.routers.docker-registry.rule=Host(`registry.tuxito.be`)"
+        - "traefik.http.routers.docker-registry.entrypoints=websecure"
+        - "traefik.http.routers.docker-registry.tls.certresolver=letsencrypt"
+        - "traefik.http.services.docker-registry.loadbalancer.server.port=5000"
+        - "traefik.docker.network=traefik_public"
+    environment:
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+      - REGISTRY_HTTP_HEADERS_X-Content-Type-Options=[nosniff]
+      - REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin=['*']
+      - REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods=['HEAD','GET','OPTIONS','DELETE']
+      - REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers=['Authorization','Accept','Cache-Control']
+      - REGISTRY_HTTP_HEADERS_Access-Control-Max-Age=[1728000]
+      - REGISTRY_HTTP_HEADERS_Access-Control-Allow-Credentials=[true]
+      - REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers=['Docker-Content-Digest']
+    volumes:
+      - /mnt/proxmox_swarm_data/development-tools/docker-registry/data:/var/lib/registry:rw
+    networks:
+      - traefik_public
+      - dev_internal
+
+networks:
+  traefik_public:
+    external: true
+  dev_internal:
+    driver: overlay
+    attachable: true

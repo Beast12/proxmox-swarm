@@ -1,0 +1,36 @@
+---
+- name: Ensure development stack directories exist on shared storage
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0775"
+  loop: "{{ development_dirs }}"
+
+- name: Ensure CIFS utilities are installed
+  ansible.builtin.package:
+    name: cifs-utils
+    state: present
+
+- name: Ensure Home Assistant CIFS mount point exists
+  ansible.builtin.file:
+    path: "{{ homeassistant_cifs.path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0775"
+
+- name: Ensure Home Assistant config share is unmounted before remount
+  ansible.builtin.mount:
+    path: "{{ homeassistant_cifs.path }}"
+    state: unmounted
+  failed_when: false
+
+- name: Mount Home Assistant config share
+  ansible.builtin.mount:
+    src: "{{ homeassistant_cifs.src }}"
+    path: "{{ homeassistant_cifs.path }}"
+    fstype: "{{ homeassistant_cifs.fstype }}"
+    opts: "{{ homeassistant_cifs.opts }}"
+    state: mounted

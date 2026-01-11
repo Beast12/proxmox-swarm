@@ -1,0 +1,75 @@
+services:
+  influxdb:
+    image: influxdb:latest
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      labels:
+        - "homepage.group=Database"
+        - "homepage.name=InfluxDB"
+        - "homepage.icon=influxdb.png"
+        - "homepage.href=https://influxdb.tuxito.be"
+        - "homepage.description=Time Series Database"
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: stop-first
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: pause
+    ports:
+      - target: 8086
+        published: 8086
+        protocol: tcp
+        mode: host
+    environment:
+      # Setup mode configuration (first run only)
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=Heidi12maart!
+      - DOCKER_INFLUXDB_INIT_ORG=homelab
+      - DOCKER_INFLUXDB_INIT_BUCKET=default
+      - DOCKER_INFLUXDB_INIT_RETENTION=30d
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=your-secure-token-here
+      # Runtime configuration
+      - INFLUXD_HTTP_BIND_ADDRESS=:8086
+      - INFLUXD_REPORTING_DISABLED=true
+      - INFLUXD_LOG_LEVEL=info
+      - INFLUXD_BOLT_PATH=/var/lib/influxdb2/influxd.bolt
+      - INFLUXD_ENGINE_PATH=/var/lib/influxdb2/engine
+      - INFLUXD_QUERY_CONCURRENCY=10
+      - INFLUXD_QUERY_QUEUE_SIZE=10
+      - TZ=Europe/Brussels
+    volumes:
+      - influxdb-data:/var/lib/influxdb2:rw
+    networks:
+      - influxdb-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8086/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  influxdb-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/swarm-data/influxdb/data
+
+networks:
+  influxdb-network:
+    driver: overlay
+    attachable: true

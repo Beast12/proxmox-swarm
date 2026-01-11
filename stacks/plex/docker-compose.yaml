@@ -48,18 +48,18 @@ services:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-      # labels:
-      #   - "homepage.group=Media"
-      #   - "homepage.name=Plex"
-      #   - "homepage.icon=plex.png"
-      #   - "homepage.href=https://plex.tuxito.be"
-      #   - "homepage.description=Media Server"
-      #   - "traefik.enable=true"
-      #   - "traefik.http.routers.plex.rule=Host(`plex.tuxito.be`)"
-      #   - "traefik.http.routers.plex.entrypoints=websecure"
-      #   - "traefik.http.routers.plex.tls.certresolver=letsencrypt"
-      #   - "traefik.http.services.plex.loadbalancer.server.port=32400"
-      #   - "traefik.docker.network=traefik_public"
+      labels:
+        - "homepage.group=Media"
+        - "homepage.name=Plex"
+        - "homepage.icon=plex.png"
+        - "homepage.href=https://plex.tuxito.be"
+        - "homepage.description=Media Server"
+        - "traefik.enable=true"
+        - "traefik.http.routers.plex.rule=Host(`plex.tuxito.be`)"
+        - "traefik.http.routers.plex.entrypoints=websecure"
+        - "traefik.http.routers.plex.tls.certresolver=letsencrypt"
+        - "traefik.http.services.plex.loadbalancer.server.port=32400"
+        - "traefik.docker.network=traefik_public"
 
 volumes:
   plex_config:

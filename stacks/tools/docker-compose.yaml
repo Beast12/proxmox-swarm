@@ -1,0 +1,323 @@
+version: "3.8"
+
+services:
+  convertx:
+    image: ghcr.io/c4illin/convertx:latest
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Utility Tools"
+        - "homepage.name=ConvertX"
+        - "homepage.icon=mdi-file-swap"
+        - "homepage.href=https://convert.tuxito.be"
+        - "homepage.description=File Converter (1000+ formats)"
+        - "traefik.enable=true"
+        - "traefik.http.routers.convertx.rule=Host(`convert.tuxito.be`)"
+        - "traefik.http.routers.convertx.entrypoints=websecure"
+        - "traefik.http.routers.convertx.tls.certresolver=letsencrypt"
+        - "traefik.http.services.convertx.loadbalancer.server.port=3000"
+        - "traefik.docker.network=traefik_public"
+    environment:
+      - JWT_SECRET=${CONVERTX_JWT_SECRET}
+      - ACCOUNT_REGISTRATION=${CONVERTX_ACCOUNT_REGISTRATION:-false}
+      - HTTP_ALLOWED=${CONVERTX_HTTP_ALLOWED:-false}
+      - ALLOW_UNAUTHENTICATED=${CONVERTX_ALLOW_UNAUTHENTICATED:-false}
+      - AUTO_DELETE_EVERY_N_HOURS=${CONVERTX_AUTO_DELETE_HOURS:-24}
+      - TZ=${TZ:-Europe/Brussels}
+    volumes:
+      - convertx_data:/app/data
+    networks:
+      - traefik_public
+      - tools_internal
+
+  it-tools:
+    image: corentinth/it-tools:latest
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Utility Tools"
+        - "homepage.name=IT-Tools"
+        - "homepage.icon=mdi-tools"
+        - "homepage.href=https://tools.tuxito.be"
+        - "homepage.description=Developer Tools Collection"
+        - "traefik.enable=true"
+        - "traefik.http.routers.it-tools.rule=Host(`tools.tuxito.be`)"
+        - "traefik.http.routers.it-tools.entrypoints=websecure"
+        - "traefik.http.routers.it-tools.tls.certresolver=letsencrypt"
+        - "traefik.http.services.it-tools.loadbalancer.server.port=80"
+        - "traefik.docker.network=traefik_public"
+    environment:
+      - TZ=${TZ:-Europe/Brussels}
+    networks:
+      - traefik_public
+      - tools_internal
+
+  qrding:
+    image: ghcr.io/rishikanthc/qrding:latest
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Utility Tools"
+        - "homepage.name=QRding"
+        - "homepage.icon=mdi-qrcode"
+        - "homepage.href=https://qr.tuxito.be"
+        - "homepage.description=QR Code Generator"
+        - "traefik.enable=true"
+        - "traefik.http.routers.qrding.rule=Host(`qr.tuxito.be`)"
+        - "traefik.http.routers.qrding.entrypoints=websecure"
+        - "traefik.http.routers.qrding.tls.certresolver=letsencrypt"
+        - "traefik.http.services.qrding.loadbalancer.server.port=3000"
+        - "traefik.docker.network=traefik_public"
+    environment:
+      - TZ=${TZ:-Europe/Brussels}
+    networks:
+      - traefik_public
+      - tools_internal
+
+  freshrss:
+    image: ghcr.io/linuxserver/freshrss:latest
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Utility Tools"
+        - "homepage.name=FreshRSS"
+        - "homepage.icon=freshrss"
+        - "homepage.href=https://rss.tuxito.be"
+        - "homepage.description=RSS Feed Reader"
+        - "traefik.enable=true"
+        - "traefik.http.routers.freshrss.rule=Host(`rss.tuxito.be`)"
+        - "traefik.http.routers.freshrss.entrypoints=websecure"
+        - "traefik.http.routers.freshrss.tls.certresolver=letsencrypt"
+        - "traefik.http.services.freshrss.loadbalancer.server.port=80"
+        - "traefik.docker.network=traefik_public"
+    volumes:
+      - freshrss:/config:rw
+    environment:
+      - TZ=${TZ:-Europe/Brussels}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - traefik_public
+      - tools_internal
+
+  pairdrop:
+    image: lscr.io/linuxserver/pairdrop:latest
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Utility Tools"
+        - "homepage.name=PairDrop"
+        - "homepage.icon=mdi-share-variant"
+        - "homepage.href=https://pairdrop.tuxito.be"
+        - "homepage.description=Cross-platform File Sharing"
+        - "traefik.enable=true"
+        - "traefik.http.routers.pairdrop.rule=Host(`pairdrop.tuxito.be`)"
+        - "traefik.http.routers.pairdrop.entrypoints=websecure"
+        - "traefik.http.routers.pairdrop.tls.certresolver=letsencrypt"
+        - "traefik.http.services.pairdrop.loadbalancer.server.port=3000"
+        - "traefik.docker.network=traefik_public"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Brussels}
+      - RATE_LIMIT=${PAIRDROP_RATE_LIMIT:-false}
+      - WS_FALLBACK=${PAIRDROP_WS_FALLBACK:-false}
+      - DEBUG_MODE=${PAIRDROP_DEBUG_MODE:-false}
+    networks:
+      - traefik_public
+      - tools_internal
+
+  stirling-pdf:
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 1G
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Utility Tools"
+        - "homepage.name=Stirling PDF"
+        - "homepage.icon=mdi-file-pdf-box"
+        - "homepage.href=https://pdf.tuxito.be"
+        - "homepage.description=PDF Manipulation Toolkit"
+        - "traefik.enable=true"
+        - "traefik.http.routers.stirling-pdf.rule=Host(`pdf.tuxito.be`)"
+        - "traefik.http.routers.stirling-pdf.entrypoints=websecure"
+        - "traefik.http.routers.stirling-pdf.tls.certresolver=letsencrypt"
+        - "traefik.http.services.stirling-pdf.loadbalancer.server.port=8080"
+        - "traefik.docker.network=traefik_public"
+    volumes:
+      - stirling_data:/usr/share/tessdata:rw
+      - stirling_config:/configs:rw
+      - stirling_logs:/logs:rw
+    environment:
+      - SECURITY_ENABLELOGIN=${STIRLING_ENABLE_LOGIN:-false}
+      - LANGS=${STIRLING_LANGS:-en_GB,en_US,de_DE,fr_FR,es_ES,nl_NL}
+      - SYSTEM_DEFAULTLOCALE=${STIRLING_DEFAULT_LOCALE:-en-US}
+      - UI_APPNAME=${STIRLING_APP_NAME:-Stirling-PDF}
+      - UI_HOMEDESCRIPTION=${STIRLING_DESCRIPTION:-Self-hosted PDF manipulation toolkit}
+      - UI_APPNAMENAVBAR=${STIRLING_NAVBAR_NAME:-Stirling-PDF}
+      - SYSTEM_MAXFILESIZE=${STIRLING_MAX_FILE_SIZE:-100}
+      - TZ=${TZ:-Europe/Brussels}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP' || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    networks:
+      - traefik_public
+      - tools_internal
+
+  cronmaster:
+    image: ghcr.io/fccview/cronmaster:main
+    user: "root"
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Utility Tools"
+        - "homepage.name=CronMaster"
+        - "homepage.icon=mdi-clock"
+        - "homepage.href=https://cron.tuxito.be"
+        - "homepage.description=Cron Job Management"
+        - "traefik.enable=true"
+        - "traefik.http.routers.cronmaster.rule=Host(`cron.tuxito.be`)"
+        - "traefik.http.routers.cronmaster.entrypoints=websecure"
+        - "traefik.http.routers.cronmaster.tls.certresolver=letsencrypt"
+        - "traefik.http.services.cronmaster.loadbalancer.server.port=3000"
+        - "traefik.docker.network=traefik_public"
+    environment:
+      - NODE_ENV=production
+      - DOCKER=true
+      - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=${CRONMASTER_UPDATE_INTERVAL:-30000}
+      - HOST_PROJECT_DIR=${CRONMASTER_PROJECT_DIR:-/mnt/proxmox_swarm_data/cronmaster}
+      - HOST_CRONTAB_USER=root
+      - TZ=${TZ:-Europe/Brussels}
+    volumes:
+      - cronmaster_scripts:/app/scripts
+      - cronmaster_data:/app/data
+      - cronmaster_snippets:/app/snippets
+      - cronmaster_ssh:/root/.ssh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - traefik_public
+      - tools_internal
+
+volumes:
+  convertx_data:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
+      device: ":/mnt/proxmox_swarm_data/tools/convertx"
+
+  freshrss:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
+      device: ":/mnt/proxmox_swarm_data/tools/freshrss"
+
+  stirling_data:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
+      device: ":/mnt/proxmox_swarm_data/tools/stirling-pdf/data"
+
+  stirling_config:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
+      device: ":/mnt/proxmox_swarm_data/tools/stirling-pdf/config"
+
+  stirling_logs:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
+      device: ":/mnt/proxmox_swarm_data/tools/stirling-pdf/logs"
+
+  cronmaster_scripts:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
+      device: ":/mnt/proxmox_swarm_data/tools/cronmaster/scripts"
+
+  cronmaster_data:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
+      device: ":/mnt/proxmox_swarm_data/tools/cronmaster/data"
+
+  cronmaster_snippets:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
+      device: ":/mnt/proxmox_swarm_data/tools/cronmaster/snippets"
+
+  cronmaster_ssh:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
+      device: ":/mnt/proxmox_swarm_data/tools/cronmaster/ssh"
+
+networks:
+  traefik_public:
+    external: true
+  tools_internal:
+    driver: overlay
+    attachable: true

@@ -30,7 +30,7 @@ services:
       - AUTO_DELETE_EVERY_N_HOURS=${CONVERTX_AUTO_DELETE_HOURS:-24}
       - TZ=${TZ:-Europe/Brussels}
     volumes:
-      - convertx_data:/app/data
+      - /mnt/proxmox_swarm_data/tools/convertx:/app/data
     networks:
       - traefik_public
       - tools_internal
@@ -111,7 +111,7 @@ services:
         - "traefik.http.services.freshrss.loadbalancer.server.port=80"
         - "traefik.docker.network=traefik_public"
     volumes:
-      - freshrss:/config:rw
+      - /mnt/proxmox_swarm_data/tools/freshrss:/config:rw
     environment:
       - TZ=${TZ:-Europe/Brussels}
     healthcheck:
@@ -183,9 +183,9 @@ services:
         - "traefik.http.services.stirling-pdf.loadbalancer.server.port=8080"
         - "traefik.docker.network=traefik_public"
     volumes:
-      - stirling_data:/usr/share/tessdata:rw
-      - stirling_config:/configs:rw
-      - stirling_logs:/logs:rw
+      - /mnt/proxmox_swarm_data/tools/stirling-pdf/data:/usr/share/tessdata:rw
+      - /mnt/proxmox_swarm_data/tools/stirling-pdf/config:/configs:rw
+      - /mnt/proxmox_swarm_data/tools/stirling-pdf/logs:/logs:rw
     environment:
       - SECURITY_ENABLELOGIN=${STIRLING_ENABLE_LOGIN:-false}
       - LANGS=${STIRLING_LANGS:-en_GB,en_US,de_DE,fr_FR,es_ES,nl_NL}
@@ -242,78 +242,14 @@ services:
       - HOST_CRONTAB_USER=root
       - TZ=${TZ:-Europe/Brussels}
     volumes:
-      - cronmaster_scripts:/app/scripts
-      - cronmaster_data:/app/data
-      - cronmaster_snippets:/app/snippets
-      - cronmaster_ssh:/root/.ssh
+      - /mnt/proxmox_swarm_data/tools/cronmaster/scripts:/app/scripts
+      - /mnt/proxmox_swarm_data/tools/cronmaster/data:/app/data
+      - /mnt/proxmox_swarm_data/tools/cronmaster/snippets:/app/snippets
+      - /mnt/proxmox_swarm_data/tools/cronmaster/ssh:/root/.ssh
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - traefik_public
       - tools_internal
-
-volumes:
-  convertx_data:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
-      device: ":/mnt/proxmox_swarm_data/tools/convertx"
-
-  freshrss:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
-      device: ":/mnt/proxmox_swarm_data/tools/freshrss"
-
-  stirling_data:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
-      device: ":/mnt/proxmox_swarm_data/tools/stirling-pdf/data"
-
-  stirling_config:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
-      device: ":/mnt/proxmox_swarm_data/tools/stirling-pdf/config"
-
-  stirling_logs:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
-      device: ":/mnt/proxmox_swarm_data/tools/stirling-pdf/logs"
-
-  cronmaster_scripts:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
-      device: ":/mnt/proxmox_swarm_data/tools/cronmaster/scripts"
-
-  cronmaster_data:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
-      device: ":/mnt/proxmox_swarm_data/tools/cronmaster/data"
-
-  cronmaster_snippets:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
-      device: ":/mnt/proxmox_swarm_data/tools/cronmaster/snippets"
-
-  cronmaster_ssh:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: addr=192.168.10.10,nfsvers=3,rw,nolock,hard,timeo=600,retrans=2
-      device: ":/mnt/proxmox_swarm_data/tools/cronmaster/ssh"
 
 networks:
   traefik_public:

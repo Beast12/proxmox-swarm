@@ -1,0 +1,12 @@
+---
+tools_root: /mnt/proxmox_swarm_data/tools
+tools_dirs:
+  - "{{ tools_root }}/convertx"
+  - "{{ tools_root }}/freshrss"
+  - "{{ tools_root }}/stirling-pdf/data"
+  - "{{ tools_root }}/stirling-pdf/config"
+  - "{{ tools_root }}/stirling-pdf/logs"
+  - "{{ tools_root }}/cronmaster/scripts"
+  - "{{ tools_root }}/cronmaster/data"
+  - "{{ tools_root }}/cronmaster/snippets"
+  - "{{ tools_root }}/cronmaster/ssh"

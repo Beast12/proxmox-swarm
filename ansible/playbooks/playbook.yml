@@ -77,6 +77,13 @@
   roles:
     - monitoring
 
+- name: Deploy Tools Stack Storage (All Swarm Nodes)
+  hosts: swarm_managers,swarm_workers
+  become: yes
+
+  roles:
+    - tools_stack
+
 - name: Deploy Plex Mounts (All Swarm Nodes)
   hosts: swarm_managers,swarm_workers
   become: yes

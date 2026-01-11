@@ -1,0 +1,9 @@
+---
+- name: Ensure tools shared storage directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0775"
+  loop: "{{ tools_dirs }}"

@@ -1,0 +1,311 @@
+# ansible/roles/frigate/templates/config.yml.j2
+# Frigate 0.16.x configuration
+# Docs: https://docs.frigate.video/configuration/
+
+mqtt:
+  enabled: true
+  host: zigbee.lan
+  port: 1883
+  user: mqtt
+  password: Heidi12maart!
+  topic_prefix: frigate
+
+lpr:
+  enabled: true
+  device: GPU
+  detection_threshold: 0.7
+  recognition_threshold: 0.85
+  min_area: 1000
+  model_size: small
+  min_plate_length: 7
+  format: ^[0-9]{1}-[A-Z]{3}-[0-9]{3}$
+  match_distance: 1
+  known_plates:
+    Koen's Car:
+      - 2-HGI-855
+      - 2-HG1-855
+
+database:
+  path: /config/frigate.db
+
+tls:
+  enabled: false
+
+detectors:
+  coral:
+    type: edgetpu
+    device: usb
+
+ffmpeg:
+  hwaccel_args: preset-intel-qsv-h264
+
+go2rtc:
+  streams:
+    doorbell:
+      - ffmpeg:https://192.168.1.91/flv?port=554&app=bcs&stream=channel0_ext.bcs&user=admin&password=Heidi12maart!
+      - rtsp://admin:Heidi12maart!@192.168.1.91:554/Preview_01_sub
+      - ffmpeg:doorbell#audio=opus
+    garden:
+      - echo:/config/get_ha_stream.sh camera.garden
+    hallway:
+      - echo:/config/get_ha_stream.sh camera.hallway
+    office:
+      - echo:/config/get_ha_stream.sh camera.office
+
+objects:
+  track:
+    - person
+    - car
+    - truck
+    - bicycle
+    - motorcycle
+    - dog
+    - cat
+  filters:
+    person:
+      min_score: 0.7
+      threshold: 0.7
+    car:
+      threshold: 0.8
+
+detect:
+  enabled: true
+  fps: 5
+
+record:
+  enabled: true
+  expire_interval: 30
+  retain:
+    days: 7
+    mode: motion
+  alerts:
+    retain:
+      days: 200
+    pre_capture: 5
+    post_capture: 5
+  detections:
+    retain:
+      days: 200
+    pre_capture: 5
+    post_capture: 5
+
+snapshots:
+  enabled: true
+  clean_copy: true
+  timestamp: true
+  bounding_box: true
+  crop: false
+  retain:
+    default: 30
+    objects:
+      person: 360
+      car: 20
+      cell phone: 20
+
+semantic_search:
+  enabled: true
+  reindex: false
+  model_size: large
+
+logger:
+  default: info
+  logs:
+    frigate.mqtt: warning
+    frigate.object_detection: info
+
+cameras:
+  front_door:
+    ffmpeg:
+      inputs:
+        - path: rtsp://admin:Heidi12maart!@192.168.1.91:554/h264Preview_01_sub
+          roles: [detect, record]
+      output_args:
+        record: preset-record-generic-audio-copy
+    lpr:
+      enabled: false
+    detect:
+      enabled: true
+      width: 1920
+      height: 1080
+    mqtt:
+      timestamp: true
+      bounding_box: true
+      crop: true
+      quality: 100
+      height: 500
+
+  hallway:
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/hallway?video
+          input_args: preset-rtsp-restream-low-latency
+          roles: [detect, record]
+    lpr:
+      enabled: false
+    objects:
+      track:
+        - person
+        - dog
+        - cat
+    detect:
+      enabled: true
+      width: 1920
+      height: 1080
+    mqtt:
+      timestamp: true
+      bounding_box: true
+      crop: true
+      quality: 100
+      height: 500
+
+  garden:
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/garden?video
+          input_args: preset-rtsp-restream-low-latency
+          roles: [detect, record]
+    lpr:
+      enabled: false
+    objects:
+      track:
+        - person
+        - dog
+        - cat
+        - bicycle
+    detect:
+      enabled: true
+      width: 1920
+      height: 1080
+    review:
+      alerts:
+        required_zones: [garden_zone]
+    mqtt:
+      timestamp: true
+      bounding_box: true
+      crop: true
+      quality: 100
+      height: 500
+    snapshots:
+      required_zones: [garden_zone]
+    zones:
+      garden_zone:
+        coordinates: 0.705,0.307,0.552,0.997,0.244,0.998,0.031,0.601,0.549,0.013,0.716,0.152,0.729,0.157
+        loitering_time: 0
+        objects: [dog, person]
+
+  office:
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/office?video
+          input_args: preset-rtsp-restream-low-latency
+          roles: [detect, record]
+    lpr:
+      enabled: false
+    objects:
+      track:
+        - person
+        - dog
+    detect:
+      enabled: true
+      width: 1920
+      height: 1080
+    review:
+      alerts:
+        required_zones: [office_zone]
+    mqtt:
+      timestamp: true
+      bounding_box: true
+      crop: true
+      quality: 100
+      height: 500
+    snapshots:
+      required_zones: [office_zone]
+    zones:
+      office_zone:
+        coordinates: 0.008,0.716,0,0.01,0.312,0.003,0.995,0.003,1,0.995,0.427,0.995,0.426,0.819,0.283,0.558,0.127,0.515,0.109,0.49
+        loitering_time: 0
+
+  garage:
+    enabled: true
+    lpr:
+      enabled: true
+      enhancement: 0
+      min_area: 1500
+    objects:
+      track:
+        - person
+        - dog
+        - car
+    mqtt:
+      timestamp: true
+      bounding_box: true
+      crop: true
+      quality: 100
+      height: 500
+    review:
+      alerts:
+        required_zones: [garage_zone]
+    detect:
+      width: 1920
+      height: 1080
+      fps: 5
+    ffmpeg:
+      inputs:
+        - path: rtsp://vanoppen.koen@gmail.com:yo2EDUtTo7suyMuVJAL@192.168.1.53:554/live/stream1
+          input_args: -rtsp_transport tcp -timeout 5000000
+          roles: [detect]
+    motion:
+      improve_contrast: false
+      contour_area: 60
+    snapshots:
+      required_zones: [garage_zone]
+    zones:
+      garage_zone:
+        coordinates: 0.611,0.113,0.539,0.121,0.452,0.114,0.338,0.119,0.286,0.121,0.105,0.158,0,0.216,0,0.506,0,0.721,0.041,1,1,1,1,0.331,1,0.177,0.668,0.116
+        loitering_time: 0
+        objects: [person, dog, car]
+        inertia: 3
+
+  garden-shed:
+    enabled: true
+    lpr:
+      enabled: false
+    objects:
+      track:
+        - person
+        - dog
+        - cat
+        - bicycle
+    mqtt:
+      timestamp: true
+      bounding_box: true
+      crop: true
+      quality: 100
+      height: 500
+    review:
+      alerts:
+        required_zones: [garden_shed_zone]
+    detect:
+      width: 1920
+      height: 1080
+      fps: 5
+    ffmpeg:
+      inputs:
+        - path: rtsp://vanoppen.koen@gmail.com:yo2EDUtTo7suyMuVJAL@192.168.1.58:554/live/stream1
+          input_args: -rtsp_transport tcp -timeout 5000000
+          roles: [detect]
+    snapshots:
+      required_zones: [garden_shed_zone]
+    zones:
+      garden_shed_zone:
+        coordinates: 0.959,0.878,0.321,0.886,0.001,0.894,0.005,0.709,0.054,0.696,0.145,0.664,0.205,0.665,0.31,0.676,0.339,0.779,0.373,0.792,0.396,0.793,0.561,0.8,0.578,0.749,0.656,0.741,0.959,0.795
+        loitering_time: 0
+
+face_recognition:
+  enabled: true
+  model_size: large
+
+classification:
+  bird:
+    enabled: true
+version: 0.16-0

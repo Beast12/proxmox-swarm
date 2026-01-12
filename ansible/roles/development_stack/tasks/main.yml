@@ -8,6 +8,14 @@
     mode: "0775"
   loop: "{{ development_dirs }}"
 
+- name: Ensure development stack directories are writable on NFS
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0777"
+    recurse: true
+  loop: "{{ development_dirs }}"
+
 - name: Ensure CIFS utilities are installed
   ansible.builtin.package:
     name: cifs-utils

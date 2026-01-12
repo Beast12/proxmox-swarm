@@ -38,7 +38,7 @@ services:
       - dev_internal
 
   docker-registry:
-    image: registry:2.8.3
+    image: registry:latest
     deploy:
       mode: replicated
       replicas: 1

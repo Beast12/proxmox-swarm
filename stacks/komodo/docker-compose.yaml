@@ -30,7 +30,7 @@ services:
 
   # Komodo Core
   core:
-    image: ghcr.io/moghtech/komodo:latest
+    image: ghcr.io/mbecker20/komodo:latest
     restart: unless-stopped
     env_file:
       - /mnt/proxmox_swarm_data/env-files/komodo.env

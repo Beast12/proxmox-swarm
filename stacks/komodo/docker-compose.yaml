@@ -8,12 +8,10 @@ services:
     networks:
       - komodo_internal
     volumes:
-      - type: bind
-        source: /mnt/proxmox_swarm_data/komodo/mongo-data
-        target: /data/db
-      - type: bind
-        source: /mnt/proxmox_swarm_data/komodo/mongo-config
-        target: /data/configdb
+      # Use named volumes (stored on local node, not NFS)
+      # MongoDB doesn't work well with NFS due to file locking
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
     deploy:
       mode: replicated
       replicas: 1
@@ -105,3 +103,11 @@ networks:
     attachable: true
   traefik_public:
     external: true
+
+volumes:
+  # MongoDB data volumes (local storage, not NFS)
+  # MongoDB requires proper file locking which NFS doesn't support well
+  mongo_data:
+    driver: local
+  mongo_config:
+    driver: local

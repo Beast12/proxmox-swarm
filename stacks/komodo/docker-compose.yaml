@@ -1,0 +1,109 @@
+version: "3.8"
+
+services:
+  # MongoDB database for Komodo
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/komodo.env
+    networks:
+      - komodo_internal
+    volumes:
+      - type: bind
+        source: /mnt/proxmox_swarm_data/komodo/mongo-data
+        target: /data/db
+      - type: bind
+        source: /mnt/proxmox_swarm_data/komodo/mongo-config
+        target: /data/configdb
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          memory: 1024M
+        reservations:
+          memory: 512M
+
+  # Komodo Core
+  core:
+    image: ghcr.io/moghtech/komodo:latest
+    restart: unless-stopped
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/komodo.env
+    networks:
+      - komodo_internal
+      - traefik_public
+    depends_on:
+      - mongo
+
+    volumes:
+      # Docker socket for Swarm management
+      - /var/run/docker.sock:/var/run/docker.sock
+
+      # NFS-backed storage for Komodo data
+      - type: bind
+        source: /mnt/proxmox_swarm_data/komodo/data
+        target: /data
+
+      # Repos directory for git integration
+      - type: bind
+        source: /mnt/proxmox_swarm_data/komodo/repos
+        target: /repos
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          memory: 2048M
+        reservations:
+          memory: 1024M
+      labels:
+        # Homepage integration
+        - "homepage.group=Infrastructure"
+        - "homepage.name=Komodo"
+        - "homepage.icon=mdi-docker"
+        - "homepage.href=https://komodo.tuxito.be"
+        - "homepage.description=Docker Swarm Management"
+
+        # Traefik configuration
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik_public"
+
+        # HTTP to HTTPS redirect
+        - "traefik.http.middlewares.komodo-https.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.komodo-https.redirectscheme.permanent=true"
+
+        # Main HTTPS router
+        - "traefik.http.routers.komodo.rule=Host(`komodo.tuxito.be`)"
+        - "traefik.http.routers.komodo.entrypoints=websecure"
+        - "traefik.http.routers.komodo.tls=true"
+        - "traefik.http.routers.komodo.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.komodo.service=komodo"
+        - "traefik.http.services.komodo.loadbalancer.server.port=9120"
+
+        # WebSocket support (important for Komodo's real-time features)
+        - "traefik.http.routers.komodo.middlewares=komodo-headers"
+        - "traefik.http.middlewares.komodo-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+
+networks:
+  komodo_internal:
+    driver: overlay
+    attachable: true
+  traefik_public:
+    external: true

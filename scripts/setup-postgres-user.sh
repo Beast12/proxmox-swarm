@@ -40,40 +40,44 @@ echo -e "${GREEN}✓ Service found${NC}\n"
 
 # Check if user exists
 echo -e "${YELLOW}→ Checking if user exists...${NC}"
-USER_CHECK=$(docker service exec postgresql_postgres psql -U postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}';" 2>/dev/null || echo "")
+USER_CHECK=$(docker service exec -T postgresql_postgres psql -U postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}';" 2>&1 | grep -c "^1$" || echo "0")
 
-if [ "$USER_CHECK" = "1" ]; then
+if [ "$USER_CHECK" != "0" ]; then
     echo -e "${YELLOW}  ⚠ User '$DB_USER' already exists${NC}"
     read -p "  Update password? (y/N): " -r
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo -e "${BLUE}  Skipping user${NC}\n"
     else
         echo -e "${YELLOW}  → Updating password...${NC}"
-        docker service exec postgresql_postgres psql -U postgres -c "ALTER USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';" >/dev/null 2>&1
-        echo -e "${GREEN}  ✓ Password updated${NC}\n"
+        docker service exec -T postgresql_postgres psql -U postgres -c "ALTER USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';" 2>&1 | grep -q "ALTER ROLE" && \
+            echo -e "${GREEN}  ✓ Password updated${NC}\n" || \
+            echo -e "${RED}  ✗ Failed to update password${NC}\n"
     fi
 else
     echo -e "${YELLOW}→ Creating user '$DB_USER'...${NC}"
-    docker service exec postgresql_postgres psql -U postgres -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';" >/dev/null 2>&1
-    echo -e "${GREEN}✓ User created${NC}\n"
+    docker service exec -T postgresql_postgres psql -U postgres -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';" 2>&1 | grep -q "CREATE ROLE" && \
+        echo -e "${GREEN}✓ User created${NC}\n" || \
+        echo -e "${RED}✗ Failed to create user${NC}\n"
 fi
 
 # Check if database exists
 echo -e "${YELLOW}→ Checking if database exists...${NC}"
-DB_CHECK=$(docker service exec postgresql_postgres psql -U postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}';" 2>/dev/null || echo "")
+DB_CHECK=$(docker service exec -T postgresql_postgres psql -U postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}';" 2>&1 | grep -c "^1$" || echo "0")
 
-if [ "$DB_CHECK" = "1" ]; then
+if [ "$DB_CHECK" != "0" ]; then
     echo -e "${BLUE}  ℹ Database '$DB_NAME' already exists${NC}\n"
 else
     echo -e "${YELLOW}→ Creating database '$DB_NAME'...${NC}"
-    docker service exec postgresql_postgres psql -U postgres -c "CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};" >/dev/null 2>&1
-    echo -e "${GREEN}✓ Database created${NC}\n"
+    docker service exec -T postgresql_postgres psql -U postgres -c "CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};" 2>&1 | grep -q "CREATE DATABASE" && \
+        echo -e "${GREEN}✓ Database created${NC}\n" || \
+        echo -e "${RED}✗ Failed to create database${NC}\n"
 fi
 
 # Grant privileges
 echo -e "${YELLOW}→ Granting privileges...${NC}"
-docker service exec postgresql_postgres psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};" >/dev/null 2>&1
-echo -e "${GREEN}✓ Privileges granted${NC}\n"
+docker service exec -T postgresql_postgres psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};" 2>&1 | grep -q "GRANT" && \
+    echo -e "${GREEN}✓ Privileges granted${NC}\n" || \
+    echo -e "${YELLOW}⚠ Privileges may already be set${NC}\n"
 
 echo -e "${GREEN}╔════════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║  Setup Complete                                ║${NC}"
@@ -86,4 +90,4 @@ echo -e "  Password: ${YELLOW}$DB_PASSWORD${NC}"
 echo ""
 echo -e "${BLUE}Connection String:${NC}"
 echo -e "  ${YELLOW}postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}${NC}"
-echo ""
+echo ""ss

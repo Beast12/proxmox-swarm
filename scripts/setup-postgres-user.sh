@@ -24,7 +24,8 @@ fi
 
 DB_USER="$1"
 DB_NAME="$2"
-DB_PASSWORD="${3:-$(openssl rand -base64 32)}"
+# Generate alphanumeric password only (no special characters that could cause issues)
+DB_PASSWORD="${3:-$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9' | head -c 32)}"
 
 echo -e "${BLUE}╔════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║  PostgreSQL User Setup                         ║${NC}"
@@ -74,22 +75,34 @@ else
 fi
 
 # Grant privileges
-echo -e "${YELLOW}→ Granting privileges...${NC}"
-docker service exec -T postgresql_postgres psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};" 2>&1 | grep -q "GRANT" && \
-    echo -e "${GREEN}✓ Database privileges granted${NC}" || \
-    echo -e "${YELLOW}⚠ Database privileges may already be set${NC}"
+echo -e "${YELLOW}→ Granting full database privileges...${NC}"
 
-# Grant schema creation privilege
-echo -e "${YELLOW}→ Granting schema creation privilege...${NC}"
-docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "GRANT CREATE ON DATABASE ${DB_NAME} TO ${DB_USER};" 2>&1 | grep -q "GRANT" && \
-    echo -e "${GREEN}✓ Schema creation privilege granted${NC}" || \
-    echo -e "${YELLOW}⚠ Schema creation privilege may already be set${NC}"
+# 1. Grant all privileges on the database itself
+docker service exec -T postgresql_postgres psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};" >/dev/null 2>&1
+echo -e "${GREEN}  ✓ Database privileges${NC}"
 
-# Grant public schema usage
-echo -e "${YELLOW}→ Granting public schema privileges...${NC}"
-docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "GRANT ALL ON SCHEMA public TO ${DB_USER};" 2>&1 | grep -q "GRANT" && \
-    echo -e "${GREEN}✓ Public schema privileges granted${NC}\n" || \
-    echo -e "${YELLOW}⚠ Public schema privileges may already be set${NC}\n"
+# 2. Make user owner of the database (ensures full control)
+docker service exec -T postgresql_postgres psql -U postgres -c "ALTER DATABASE ${DB_NAME} OWNER TO ${DB_USER};" >/dev/null 2>&1
+echo -e "${GREEN}  ✓ Database ownership${NC}"
+
+# 3. Grant schema creation privilege
+docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "GRANT CREATE ON DATABASE ${DB_NAME} TO ${DB_USER};" >/dev/null 2>&1
+echo -e "${GREEN}  ✓ Schema creation privilege${NC}"
+
+# 4. Grant all privileges on public schema
+docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "GRANT ALL ON SCHEMA public TO ${DB_USER};" >/dev/null 2>&1
+echo -e "${GREEN}  ✓ Public schema privileges${NC}"
+
+# 5. Grant privileges on all tables in public schema (current and future)
+docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ${DB_USER};" >/dev/null 2>&1
+docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${DB_USER};" >/dev/null 2>&1
+docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${DB_USER};" >/dev/null 2>&1
+docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ${DB_USER};" >/dev/null 2>&1
+echo -e "${GREEN}  ✓ Table and sequence privileges${NC}"
+
+# 6. Grant CREATEDB role attribute (allows creating additional databases if needed)
+docker service exec -T postgresql_postgres psql -U postgres -c "ALTER USER ${DB_USER} CREATEDB;" >/dev/null 2>&1
+echo -e "${GREEN}  ✓ CREATEDB role attribute${NC}\n"
 
 echo -e "${GREEN}╔════════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║  Setup Complete                                ║${NC}"

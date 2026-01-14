@@ -15,6 +15,10 @@ usage() {
     echo -e "${BLUE}Examples:${NC}"
     echo "  $0 dockhand dockhand"
     echo "  $0 authentik authentik 'mySecurePassword123!'"
+    echo ""
+    echo -e "${BLUE}Remote execution:${NC}"
+    echo "  DOCKER_HOST_OVERRIDE=ssh://user@swarm-worker-w2 $0 dockhand dockhand"
+    echo "  DOCKER_SSH_USER=koen $0 dockhand dockhand"
     exit 1
 }
 
@@ -30,13 +34,38 @@ echo -e "${BLUE}╔════════════════════�
 echo -e "${BLUE}║  PostgreSQL User Setup                         ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════╝${NC}\n"
 
-# Check if service exists
-echo -e "${YELLOW}→ Checking PostgreSQL service...${NC}"
-if ! docker service ls --format "{{.Name}}" | grep -q "^postgresql_postgres$"; then
-    echo -e "${RED}✗ PostgreSQL service not found${NC}"
-    exit 1
-fi
-echo -e "${GREEN}✓ Service found${NC}\n"
+SERVICE_NAME="postgresql_postgres"
+DOCKER_BIN="${DOCKER_BIN:-docker}"
+DOCKER_SSH_USER="${DOCKER_SSH_USER:-$USER}"
+
+docker_cmd() {
+    if [ -n "${DOCKER_HOST_OVERRIDE:-}" ]; then
+        "$DOCKER_BIN" -H "$DOCKER_HOST_OVERRIDE" "$@"
+    elif [ -n "${DOCKER_REMOTE_HOST:-}" ]; then
+        "$DOCKER_BIN" -H "ssh://${DOCKER_REMOTE_HOST}" "$@"
+    else
+        "$DOCKER_BIN" "$@"
+    fi
+}
+
+get_running_node() {
+    docker_cmd service ps "$SERVICE_NAME" --format "{{.Node}} {{.CurrentState}}" 2>/dev/null | \
+        awk '$2 ~ /^Running/ {print $1; exit}'
+}
+
+get_container_id() {
+    docker_cmd ps --filter "name=${SERVICE_NAME}.1" --format "{{.ID}}" 2>/dev/null | head -n 1
+}
+
+ensure_remote_docker() {
+    local node="$1"
+    if [ -z "$node" ]; then
+        return 1
+    fi
+    DOCKER_REMOTE_HOST="${DOCKER_SSH_USER}@${node}"
+    export DOCKER_REMOTE_HOST
+    get_container_id
+}
 
 run_psql() {
     local db_args=()
@@ -45,8 +74,27 @@ run_psql() {
         shift
     fi
     local sql="$1"
-    docker service exec -T postgresql_postgres psql -v ON_ERROR_STOP=1 -U postgres "${db_args[@]}" -c "$sql"
+    local container_id
+    container_id="$(get_container_id)"
+    if [ -z "$container_id" ]; then
+        local node
+        node="$(get_running_node)"
+        if ! container_id="$(ensure_remote_docker "$node")" || [ -z "$container_id" ]; then
+            echo "Unable to find ${SERVICE_NAME} container locally or via ssh to ${node:-<unknown>}." 1>&2
+            echo "Set DOCKER_HOST_OVERRIDE (e.g. tcp://host:2375) or DOCKER_SSH_USER to reach the node." 1>&2
+            return 1
+        fi
+    fi
+    docker_cmd exec -i "$container_id" psql -v ON_ERROR_STOP=1 -U postgres "${db_args[@]}" -c "$sql"
 }
+
+# Check if service exists
+echo -e "${YELLOW}→ Checking PostgreSQL service...${NC}"
+if ! docker_cmd service ls --format "{{.Name}}" | grep -q "^${SERVICE_NAME}$"; then
+    echo -e "${RED}✗ PostgreSQL service not found${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✓ Service found${NC}\n"
 
 # Check if user exists
 echo -e "${YELLOW}→ Checking if user exists...${NC}"

@@ -1,6 +1,0 @@
----
-keepalived_vip: "192.168.10.25"
-keepalived_interface: "eth0"
-keepalived_router_id: 51
-keepalived_password: "changeme"
-keepalived_priority: 100

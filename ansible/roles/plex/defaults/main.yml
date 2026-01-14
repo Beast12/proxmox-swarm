@@ -1,2 +1,0 @@
----
-plex_fstab_file: "{{ playbook_dir }}/../../stacks/plex/config/fstasb"

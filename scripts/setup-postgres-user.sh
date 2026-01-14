@@ -41,8 +41,6 @@ DOCKER_SSH_USER="${DOCKER_SSH_USER:-$USER}"
 docker_cmd() {
     if [ -n "${DOCKER_HOST_OVERRIDE:-}" ]; then
         "$DOCKER_BIN" -H "$DOCKER_HOST_OVERRIDE" "$@"
-    elif [ -n "${DOCKER_REMOTE_HOST:-}" ]; then
-        "$DOCKER_BIN" -H "ssh://${DOCKER_REMOTE_HOST}" "$@"
     else
         "$DOCKER_BIN" "$@"
     fi
@@ -53,18 +51,42 @@ get_running_node() {
         awk '$2 ~ /^Running/ {print $1; exit}'
 }
 
-get_container_name() {
-    docker_cmd ps --filter "name=${SERVICE_NAME}.1" --format "{{.Names}}" 2>/dev/null | head -n 1
+get_local_node_name() {
+    docker_cmd info -f "{{.Name}}" 2>/dev/null || true
 }
 
-ensure_remote_docker() {
-    local node="$1"
+get_target_docker_host() {
+    if [ -n "${DOCKER_HOST_OVERRIDE:-}" ]; then
+        echo "$DOCKER_HOST_OVERRIDE"
+        return 0
+    fi
+    local node
+    node="$(get_running_node)"
     if [ -z "$node" ]; then
         return 1
     fi
-    DOCKER_REMOTE_HOST="${DOCKER_SSH_USER}@${node}"
-    export DOCKER_REMOTE_HOST
-    get_container_name
+    local local_node
+    local_node="$(get_local_node_name)"
+    if [ -n "$local_node" ] && [ "$node" = "$local_node" ]; then
+        echo ""
+        return 0
+    fi
+    echo "ssh://${DOCKER_SSH_USER}@${node}"
+}
+
+docker_target_cmd() {
+    local target_host="$1"
+    shift
+    if [ -n "$target_host" ]; then
+        "$DOCKER_BIN" -H "$target_host" "$@"
+    else
+        "$DOCKER_BIN" "$@"
+    fi
+}
+
+get_container_name_on_target() {
+    local target_host="$1"
+    docker_target_cmd "$target_host" ps --filter "name=${SERVICE_NAME}.1" --format "{{.Names}}" 2>/dev/null | head -n 1
 }
 
 run_psql() {
@@ -74,23 +96,24 @@ run_psql() {
     if [ -n "$db_name" ]; then
         db_args=(-d "$db_name")
     fi
+    local target_host
+    target_host="$(get_target_docker_host)" || {
+        echo "Unable to determine running node for ${SERVICE_NAME}." 1>&2
+        return 1
+    }
     local container_name
-    container_name="$(get_container_name)"
+    container_name="$(get_container_name_on_target "$target_host")"
     if [ -z "$container_name" ]; then
-        local node
-        node="$(get_running_node)"
-        if ! container_name="$(ensure_remote_docker "$node")" || [ -z "$container_name" ]; then
-            echo "Unable to find ${SERVICE_NAME} container locally or via ssh to ${node:-<unknown>}." 1>&2
-            echo "Set DOCKER_HOST_OVERRIDE (e.g. tcp://host:2375) or DOCKER_SSH_USER to reach the node." 1>&2
-            return 1
-        fi
+        echo "Unable to find ${SERVICE_NAME} container on target host." 1>&2
+        echo "Set DOCKER_HOST_OVERRIDE (e.g. tcp://host:2375) or DOCKER_SSH_USER to reach the node." 1>&2
+        return 1
     fi
     local output
-    if ! output="$(docker_cmd exec -i "$container_name" psql -v ON_ERROR_STOP=1 -U postgres "${db_args[@]}" -c "$sql" 2>&1)"; then
+    if ! output="$(docker_target_cmd "$target_host" exec -i "$container_name" psql -v ON_ERROR_STOP=1 -U postgres "${db_args[@]}" -c "$sql" 2>&1)"; then
         if echo "$output" | grep -q "No such container"; then
-            container_name="$(get_container_name)"
+            container_name="$(get_container_name_on_target "$target_host")"
             if [ -n "$container_name" ]; then
-                output="$(docker_cmd exec -i "$container_name" psql -v ON_ERROR_STOP=1 -U postgres "${db_args[@]}" -c "$sql" 2>&1)" || {
+                output="$(docker_target_cmd "$target_host" exec -i "$container_name" psql -v ON_ERROR_STOP=1 -U postgres "${db_args[@]}" -c "$sql" 2>&1)" || {
                     echo "$output"
                     return 1
                 }

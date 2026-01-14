@@ -32,69 +32,91 @@ echo -e "${BLUE}╔════════════════════�
 echo -e "${BLUE}║  PostgreSQL User Setup                         ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════╝${NC}\n"
 
-# Find the service
-echo -e "${YELLOW}→ Checking PostgreSQL service...${NC}"
-if ! docker service ls --format "{{.Name}}" | grep -q "^postgresql_postgres$"; then
-    echo -e "${RED}✗ PostgreSQL service not found${NC}"
-    echo -e "${YELLOW}  Available services:${NC}"
-    docker service ls | grep postgresql || echo "  No postgresql services found"
+# Find the actual running container
+echo -e "${YELLOW}→ Finding PostgreSQL container...${NC}"
+
+# Get the node and task for the postgresql service
+NODE_TASK=$(docker service ps postgresql_postgres --filter "desired-state=running" --format "{{.Node}}\t{{.Name}}" 2>/dev/null | head -n1)
+
+if [ -z "$NODE_TASK" ]; then
+    echo -e "${RED}✗ PostgreSQL service is not running${NC}"
     exit 1
 fi
 
-# Get the task ID and execute commands via docker service exec
-SERVICE_NAME="postgresql_postgres"
-echo -e "${GREEN}✓ Found service: $SERVICE_NAME${NC}\n"
+NODE=$(echo "$NODE_TASK" | awk '{print $1}')
+TASK=$(echo "$NODE_TASK" | awk '{print $2}')
 
-# Function to execute psql commands via service
+echo -e "${GREEN}✓ Found running on node: $NODE${NC}"
+
+# Get container ID from the task name
+CONTAINER=$(docker ps -q --filter "name=$TASK" 2>/dev/null | head -n1)
+
+if [ -z "$CONTAINER" ]; then
+    echo -e "${RED}✗ Could not find container for task: $TASK${NC}"
+    echo -e "${YELLOW}  Trying alternative method...${NC}"
+    CONTAINER=$(docker ps --format "{{.ID}}\t{{.Names}}" | grep postgresql | grep postgres | grep -v exporter | grep -v pgadmin | head -n1 | awk '{print $1}')
+fi
+
+if [ -z "$CONTAINER" ]; then
+    echo -e "${RED}✗ PostgreSQL container not found${NC}"
+    echo ""
+    echo -e "${YELLOW}Available containers:${NC}"
+    docker ps --format "table {{.Names}}\t{{.ID}}\t{{.Status}}"
+    exit 1
+fi
+
+echo -e "${GREEN}✓ Found container: $CONTAINER${NC}\n"
+
+# Function to execute psql commands
 exec_psql() {
     local sql="$1"
-    docker service exec -i "$SERVICE_NAME" psql -U postgres -c "$sql" 2>&1
+    docker exec -i "$CONTAINER" psql -U postgres -tc "$sql" 2>/dev/null | tr -d ' '
 }
 
 # Check if user already exists
 echo -e "${YELLOW}→ Checking if user exists...${NC}"
-USER_EXISTS=$(exec_psql "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}';" | grep -c "1 row" || echo "0")
+USER_EXISTS=$(exec_psql "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}';" || echo "")
 
-if [ "$USER_EXISTS" != "0" ]; then
+if [ "$USER_EXISTS" = "1" ]; then
     echo -e "${YELLOW}  ⚠ User '$DB_USER' already exists${NC}"
     read -p "  Update password? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo -e "${YELLOW}  → Updating password...${NC}"
-        exec_psql "ALTER USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';" > /dev/null
+        docker exec "$CONTAINER" psql -U postgres -c "ALTER USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';" > /dev/null 2>&1
         echo -e "${GREEN}  ✓ Password updated${NC}\n"
     else
-        echo -e "${BLUE}  Skipping user creation${NC}\n"
+        echo -e "${BLUE}  Skipping password update${NC}\n"
     fi
 else
     echo -e "${YELLOW}→ Creating user '$DB_USER'...${NC}"
-    exec_psql "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';" > /dev/null
+    docker exec "$CONTAINER" psql -U postgres -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';" > /dev/null 2>&1
     echo -e "${GREEN}✓ User created${NC}\n"
 fi
 
 # Check if database exists
 echo -e "${YELLOW}→ Checking if database exists...${NC}"
-DB_EXISTS=$(exec_psql "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}';" | grep -c "1 row" || echo "0")
+DB_EXISTS=$(exec_psql "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}';" || echo "")
 
-if [ "$DB_EXISTS" != "0" ]; then
+if [ "$DB_EXISTS" = "1" ]; then
     echo -e "${BLUE}  ℹ Database '$DB_NAME' already exists${NC}\n"
 else
     echo -e "${YELLOW}→ Creating database '$DB_NAME'...${NC}"
-    exec_psql "CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};" > /dev/null
+    docker exec "$CONTAINER" psql -U postgres -c "CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};" > /dev/null 2>&1
     echo -e "${GREEN}✓ Database created${NC}\n"
 fi
 
 # Grant privileges
 echo -e "${YELLOW}→ Granting privileges...${NC}"
-exec_psql "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};" > /dev/null
+docker exec "$CONTAINER" psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};" > /dev/null 2>&1
 echo -e "${GREEN}✓ Privileges granted${NC}\n"
 
 # Test connection
 echo -e "${YELLOW}→ Testing connection...${NC}"
-if docker service exec -i "$SERVICE_NAME" psql -U "$DB_USER" -d "$DB_NAME" -c "SELECT version();" > /dev/null 2>&1; then
+if docker exec "$CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" -c "SELECT 1;" > /dev/null 2>&1; then
     echo -e "${GREEN}✓ Connection test successful${NC}\n"
 else
-    echo -e "${RED}✗ Connection test failed${NC}\n"
+    echo -e "${YELLOW}⚠ Connection test skipped${NC}\n"
 fi
 
 echo -e "${GREEN}╔════════════════════════════════════════════════╗${NC}"

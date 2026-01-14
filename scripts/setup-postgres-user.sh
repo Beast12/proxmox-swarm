@@ -34,16 +34,27 @@ echo -e "${BLUE}╚════════════════════�
 
 # Find PostgreSQL container
 echo -e "${YELLOW}→ Finding PostgreSQL container...${NC}"
-CONTAINER=$(docker ps -q -f "label=com.docker.swarm.service.name=postgresql_postgres" | head -n1)
 
+# Try to find by service label first
+CONTAINER=$(docker ps -q -f "label=com.docker.swarm.service.name=postgresql_postgres" 2>/dev/null | head -n1)
+
+# If not found, try by name pattern
 if [ -z "$CONTAINER" ]; then
-    CONTAINER=$(docker ps -q -f "name=postgresql_postgres" | head -n1)
+    CONTAINER=$(docker ps --filter "name=postgresql_postgres" --format "{{.ID}}" 2>/dev/null | head -n1)
+fi
+
+# If still not found, try to find any postgres container in the postgresql stack
+if [ -z "$CONTAINER" ]; then
+    CONTAINER=$(docker ps --filter "label=com.docker.stack.namespace=postgresql" --format "{{.Names}}\t{{.ID}}" 2>/dev/null | grep postgres | grep -v exporter | grep -v pgadmin | head -n1 | awk '{print $2}')
 fi
 
 if [ -z "$CONTAINER" ]; then
     echo -e "${RED}✗ PostgreSQL container not found${NC}"
     echo -e "${YELLOW}  Make sure PostgreSQL stack is running:${NC}"
     echo -e "  docker service ls | grep postgresql"
+    echo ""
+    echo -e "${YELLOW}  Debug: Current postgres containers:${NC}"
+    docker ps --filter "label=com.docker.stack.namespace=postgresql" --format "table {{.Names}}\t{{.ID}}\t{{.Status}}"
     exit 1
 fi
 

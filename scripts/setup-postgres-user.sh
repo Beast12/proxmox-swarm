@@ -76,8 +76,20 @@ fi
 # Grant privileges
 echo -e "${YELLOW}→ Granting privileges...${NC}"
 docker service exec -T postgresql_postgres psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};" 2>&1 | grep -q "GRANT" && \
-    echo -e "${GREEN}✓ Privileges granted${NC}\n" || \
-    echo -e "${YELLOW}⚠ Privileges may already be set${NC}\n"
+    echo -e "${GREEN}✓ Database privileges granted${NC}" || \
+    echo -e "${YELLOW}⚠ Database privileges may already be set${NC}"
+
+# Grant schema creation privilege
+echo -e "${YELLOW}→ Granting schema creation privilege...${NC}"
+docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "GRANT CREATE ON DATABASE ${DB_NAME} TO ${DB_USER};" 2>&1 | grep -q "GRANT" && \
+    echo -e "${GREEN}✓ Schema creation privilege granted${NC}" || \
+    echo -e "${YELLOW}⚠ Schema creation privilege may already be set${NC}"
+
+# Grant public schema usage
+echo -e "${YELLOW}→ Granting public schema privileges...${NC}"
+docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "GRANT ALL ON SCHEMA public TO ${DB_USER};" 2>&1 | grep -q "GRANT" && \
+    echo -e "${GREEN}✓ Public schema privileges granted${NC}\n" || \
+    echo -e "${YELLOW}⚠ Public schema privileges may already be set${NC}\n"
 
 echo -e "${GREEN}╔════════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║  Setup Complete                                ║${NC}"
@@ -90,4 +102,4 @@ echo -e "  Password: ${YELLOW}$DB_PASSWORD${NC}"
 echo ""
 echo -e "${BLUE}Connection String:${NC}"
 echo -e "  ${YELLOW}postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}${NC}"
-echo ""ss
+echo ""

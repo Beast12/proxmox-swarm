@@ -68,12 +68,12 @@ ensure_remote_docker() {
 }
 
 run_psql() {
+    local db_name="${1:-}"
+    local sql="${2:-}"
     local db_args=()
-    if [ -n "${1:-}" ]; then
-        db_args=(-d "$1")
-        shift
+    if [ -n "$db_name" ]; then
+        db_args=(-d "$db_name")
     fi
-    local sql="$1"
     local container_id
     container_id="$(get_container_id)"
     if [ -z "$container_id" ]; then
@@ -98,9 +98,7 @@ echo -e "${GREEN}✓ Service found${NC}\n"
 
 # Check if user exists
 echo -e "${YELLOW}→ Checking if user exists...${NC}"
-USER_CHECK=$(run_psql "" "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}';" 2>&1 | grep -c "^1$" || echo "0")
-
-if [ "$USER_CHECK" != "0" ]; then
+if run_psql "" "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}';" 2>&1 | grep -q "^1$"; then
     echo -e "${YELLOW}  ⚠ User '$DB_USER' already exists${NC}"
     read -p "  Update password? (y/N): " -r
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -120,9 +118,7 @@ fi
 
 # Check if database exists
 echo -e "${YELLOW}→ Checking if database exists...${NC}"
-DB_CHECK=$(run_psql "" "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}';" 2>&1 | grep -c "^1$" || echo "0")
-
-if [ "$DB_CHECK" != "0" ]; then
+if run_psql "" "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}';" 2>&1 | grep -q "^1$"; then
     echo -e "${BLUE}  ℹ Database '$DB_NAME' already exists${NC}\n"
 else
     echo -e "${YELLOW}→ Creating database '$DB_NAME'...${NC}"

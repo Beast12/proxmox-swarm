@@ -73,8 +73,14 @@ else
         echo -e "${RED}✗ Failed to create database${NC}\n"
 fi
 
+# Ensure database owner
+echo -e "${YELLOW}→ Ensuring database owner...${NC}"
+docker service exec -T postgresql_postgres psql -U postgres -c "ALTER DATABASE ${DB_NAME} OWNER TO ${DB_USER};" 2>&1 | grep -q "ALTER DATABASE" && \
+    echo -e "${GREEN}✓ Database owner set${NC}" || \
+    echo -e "${YELLOW}⚠ Database owner may already be set${NC}"
+
 # Grant privileges
-echo -e "${YELLOW}→ Granting privileges...${NC}"
+echo -e "${YELLOW}→ Granting database privileges...${NC}"
 docker service exec -T postgresql_postgres psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};" 2>&1 | grep -q "GRANT" && \
     echo -e "${GREEN}✓ Database privileges granted${NC}" || \
     echo -e "${YELLOW}⚠ Database privileges may already be set${NC}"
@@ -87,9 +93,24 @@ docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "GR
 
 # Grant public schema usage
 echo -e "${YELLOW}→ Granting public schema privileges...${NC}"
+docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "ALTER SCHEMA public OWNER TO ${DB_USER};" 2>&1 | grep -q "ALTER SCHEMA" && \
+    echo -e "${GREEN}✓ Public schema owner set${NC}" || \
+    echo -e "${YELLOW}⚠ Public schema owner may already be set${NC}"
+
 docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "GRANT ALL ON SCHEMA public TO ${DB_USER};" 2>&1 | grep -q "GRANT" && \
     echo -e "${GREEN}✓ Public schema privileges granted${NC}\n" || \
     echo -e "${YELLOW}⚠ Public schema privileges may already be set${NC}\n"
+
+echo -e "${YELLOW}→ Granting default privileges for future objects...${NC}"
+docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${DB_USER};" 2>&1 | grep -q "ALTER DEFAULT PRIVILEGES" && \
+    echo -e "${GREEN}✓ Default table privileges granted${NC}" || \
+    echo -e "${YELLOW}⚠ Default table privileges may already be set${NC}"
+docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ${DB_USER};" 2>&1 | grep -q "ALTER DEFAULT PRIVILEGES" && \
+    echo -e "${GREEN}✓ Default sequence privileges granted${NC}" || \
+    echo -e "${YELLOW}⚠ Default sequence privileges may already be set${NC}"
+docker service exec -T postgresql_postgres psql -U postgres -d ${DB_NAME} -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO ${DB_USER};" 2>&1 | grep -q "ALTER DEFAULT PRIVILEGES" && \
+    echo -e "${GREEN}✓ Default function privileges granted${NC}\n" || \
+    echo -e "${YELLOW}⚠ Default function privileges may already be set${NC}\n"
 
 echo -e "${GREEN}╔════════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║  Setup Complete                                ║${NC}"

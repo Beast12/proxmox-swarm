@@ -1,0 +1,40 @@
+services:
+  dockhand:
+    image: ghcr.io/finsys/dockhand:latest
+    restart: unless-stopped
+    networks:
+      - traefik_public
+      - postgres_network
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/dockhand.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /mnt/proxmox_swarm_data/dockhand/data:/app/data
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Infrastructure"
+        - "homepage.name=Dockhand"
+        - "homepage.icon=docker.png"
+        - "homepage.href=https://dockhand.tuxito.be"
+        - "homepage.description=Modern Docker Management"
+        - "traefik.enable=true"
+        - "traefik.http.routers.dockhand.rule=Host(`dockhand.tuxito.be`)"
+        - "traefik.http.routers.dockhand.entrypoints=websecure"
+        - "traefik.http.routers.dockhand.tls.certresolver=letsencrypt"
+        - "traefik.http.services.dockhand.loadbalancer.server.port=5173"
+        - "traefik.docker.network=traefik_public"
+
+networks:
+  traefik_public:
+    external: true
+  postgres_network:
+    external: true

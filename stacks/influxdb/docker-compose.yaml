@@ -33,24 +33,8 @@ services:
         parallelism: 1
         delay: 10s
         failure_action: pause
-    environment:
-      # Setup mode configuration (first run only)
-      - DOCKER_INFLUXDB_INIT_MODE=${INFLUXDB_INIT_MODE:-setup}
-      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_INIT_USERNAME}
-      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_INIT_PASSWORD}
-      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_INIT_ORG}
-      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_INIT_BUCKET}
-      - DOCKER_INFLUXDB_INIT_RETENTION=${INFLUXDB_INIT_RETENTION:-30d}
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_INIT_ADMIN_TOKEN}
-      # Runtime configuration
-      - INFLUXD_HTTP_BIND_ADDRESS=${INFLUXDB_HTTP_BIND_ADDRESS:-:8086}
-      - INFLUXD_REPORTING_DISABLED=${INFLUXDB_REPORTING_DISABLED:-true}
-      - INFLUXD_LOG_LEVEL=${INFLUXDB_LOG_LEVEL:-info}
-      - INFLUXD_BOLT_PATH=${INFLUXDB_BOLT_PATH:-/var/lib/influxdb2/influxd.bolt}
-      - INFLUXD_ENGINE_PATH=${INFLUXDB_ENGINE_PATH:-/var/lib/influxdb2/engine}
-      - INFLUXD_QUERY_CONCURRENCY=${INFLUXDB_QUERY_CONCURRENCY:-10}
-      - INFLUXD_QUERY_QUEUE_SIZE=${INFLUXDB_QUERY_QUEUE_SIZE:-10}
-      - TZ=${TZ:-Europe/Brussels}
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/influxdb.env
     volumes:
       - influxdb-data:/var/lib/influxdb2:rw
     networks:

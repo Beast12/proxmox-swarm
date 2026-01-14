@@ -19,12 +19,8 @@ services:
       - 32414:32414/udp
     networks:
       - traefik_public
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Brussels
-      - VERSION=docker
-      - PLEX_CLAIM=claim-ti-wu-vvEZyUJhRRTaTa # Optional: Get from https://www.plex.tv/claim/
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/plex.env
     volumes:
       - plex_config:/config
       - /mnt/nfs/media-nas/movies:/media/movies

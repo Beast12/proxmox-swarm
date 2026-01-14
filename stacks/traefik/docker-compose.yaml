@@ -18,10 +18,8 @@ services:
         published: 5432
         protocol: tcp
         mode: host
-
-    environment:
-      - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
-      - CF_API_EMAIL=${CF_API_EMAIL}
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/traefik.env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik-certificates:/letsencrypt

@@ -6,10 +6,8 @@ services:
     networks:
       - traefik_public
       - default
-    environment:
-      WEBSOCKET_ENABLED: "true"
-      ADMIN_TOKEN_FILE: /run/secrets/vaultwarden_admin_token
-      DOMAIN: "https://vault.tuxito.be"
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/vaultwarden.env
     secrets:
       - vaultwarden_admin_token
     volumes:

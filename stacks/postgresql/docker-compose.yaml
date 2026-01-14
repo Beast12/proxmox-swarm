@@ -3,10 +3,8 @@ version: "3.8"
 services:
   postgres:
     image: postgis/postgis:17-3.4
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${POSTGRES_ADMIN_PASSWORD}
-      - POSTGRES_DB=postgres
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/postgresql.env
     command:
       - postgres
       - -c
@@ -45,8 +43,8 @@ services:
 
   postgres_exporter:
     image: prometheuscommunity/postgres-exporter:v0.15.0
-    environment:
-      - DATA_SOURCE_NAME=postgresql://${POSTGRES_EXPORTER_USER}:${POSTGRES_EXPORTER_PASSWORD}@postgres:5432/postgres?sslmode=disable
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/postgresql.env
     command:
       - --config.file=/etc/postgres_exporter.yml
     volumes:
@@ -64,12 +62,8 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=vanoppen.koen@gmail.com
-      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
-      - PGADMIN_CONFIG_SERVER_MODE=True
-      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
-      - SCRIPT_NAME=/pgadmin
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/postgresql.env
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:

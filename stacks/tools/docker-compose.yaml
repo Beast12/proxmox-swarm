@@ -22,13 +22,8 @@ services:
         - "traefik.http.routers.convertx.tls.certresolver=letsencrypt"
         - "traefik.http.services.convertx.loadbalancer.server.port=3000"
         - "traefik.docker.network=traefik_public"
-    environment:
-      - JWT_SECRET=${CONVERTX_JWT_SECRET}
-      - ACCOUNT_REGISTRATION=${CONVERTX_ACCOUNT_REGISTRATION:-false}
-      - HTTP_ALLOWED=${CONVERTX_HTTP_ALLOWED:-false}
-      - ALLOW_UNAUTHENTICATED=${CONVERTX_ALLOW_UNAUTHENTICATED:-false}
-      - AUTO_DELETE_EVERY_N_HOURS=${CONVERTX_AUTO_DELETE_HOURS:-24}
-      - TZ=${TZ:-Europe/Brussels}
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/convertx.env
     volumes:
       - /mnt/proxmox_swarm_data/tools/convertx:/app/data
     networks:
@@ -56,8 +51,8 @@ services:
         - "traefik.http.routers.it-tools.tls.certresolver=letsencrypt"
         - "traefik.http.services.it-tools.loadbalancer.server.port=80"
         - "traefik.docker.network=traefik_public"
-    environment:
-      - TZ=${TZ:-Europe/Brussels}
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/tools.env
     networks:
       - traefik_public
       - tools_internal
@@ -83,8 +78,8 @@ services:
         - "traefik.http.routers.qrding.tls.certresolver=letsencrypt"
         - "traefik.http.services.qrding.loadbalancer.server.port=3000"
         - "traefik.docker.network=traefik_public"
-    environment:
-      - TZ=${TZ:-Europe/Brussels}
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/tools.env
     networks:
       - traefik_public
       - tools_internal
@@ -112,8 +107,8 @@ services:
         - "traefik.docker.network=traefik_public"
     volumes:
       - /mnt/proxmox_swarm_data/tools/freshrss:/config:rw
-    environment:
-      - TZ=${TZ:-Europe/Brussels}
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/tools.env
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:80/ || exit 1"]
       interval: 30s
@@ -145,13 +140,8 @@ services:
         - "traefik.http.routers.pairdrop.tls.certresolver=letsencrypt"
         - "traefik.http.services.pairdrop.loadbalancer.server.port=3000"
         - "traefik.docker.network=traefik_public"
-    environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Brussels}
-      - RATE_LIMIT=${PAIRDROP_RATE_LIMIT:-false}
-      - WS_FALLBACK=${PAIRDROP_WS_FALLBACK:-false}
-      - DEBUG_MODE=${PAIRDROP_DEBUG_MODE:-false}
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/pairdrop.env
     networks:
       - traefik_public
       - tools_internal
@@ -186,15 +176,8 @@ services:
       - /mnt/proxmox_swarm_data/tools/stirling-pdf/data:/usr/share/tessdata:rw
       - /mnt/proxmox_swarm_data/tools/stirling-pdf/config:/configs:rw
       - /mnt/proxmox_swarm_data/tools/stirling-pdf/logs:/logs:rw
-    environment:
-      - SECURITY_ENABLELOGIN=${STIRLING_ENABLE_LOGIN:-false}
-      - LANGS=${STIRLING_LANGS:-en_GB,en_US,de_DE,fr_FR,es_ES,nl_NL}
-      - SYSTEM_DEFAULTLOCALE=${STIRLING_DEFAULT_LOCALE:-en-US}
-      - UI_APPNAME=${STIRLING_APP_NAME:-Stirling-PDF}
-      - UI_HOMEDESCRIPTION=${STIRLING_DESCRIPTION:-Self-hosted PDF manipulation toolkit}
-      - UI_APPNAMENAVBAR=${STIRLING_NAVBAR_NAME:-Stirling-PDF}
-      - SYSTEM_MAXFILESIZE=${STIRLING_MAX_FILE_SIZE:-100}
-      - TZ=${TZ:-Europe/Brussels}
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/stirling_pdf.env
     healthcheck:
       test:
         [
@@ -234,12 +217,8 @@ services:
         - "traefik.http.routers.cronmaster.tls.certresolver=letsencrypt"
         - "traefik.http.services.cronmaster.loadbalancer.server.port=3000"
         - "traefik.docker.network=traefik_public"
-    environment:
-      - NODE_ENV=production
-      - DOCKER=true
-      - NEXT_PUBLIC_CLOCK_UPDATE_INTERVAL=${CRONMASTER_UPDATE_INTERVAL:-30000}
-      - HOST_CRONTAB_USER=root
-      - TZ=${TZ:-Europe/Brussels}
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/cronmaster.env
     volumes:
       - /mnt/proxmox_swarm_data/tools/cronmaster/scripts:/app/scripts
       - /mnt/proxmox_swarm_data/tools/cronmaster/data:/app/data

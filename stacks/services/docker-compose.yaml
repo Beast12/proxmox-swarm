@@ -6,8 +6,8 @@ services:
     restart: unless-stopped
     user: "999:999"
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/services.env
     volumes:
       - /mnt/proxmox_swarm_data/services/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
       - /mnt/proxmox_swarm_data/services/redis/data:/data:rw

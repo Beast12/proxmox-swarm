@@ -20,14 +20,8 @@ services:
         - "traefik.http.routers.code-server.tls.certresolver=letsencrypt"
         - "traefik.http.services.code-server.loadbalancer.server.port=8443"
         - "traefik.docker.network=traefik_public"
-    environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Brussels}
-      - PASSWORD=${CODE_SERVER_PASSWORD}
-      - SUDO_PASSWORD=${CODE_SERVER_SUDO_PASSWORD}
-      - DEFAULT_WORKSPACE=${CODE_SERVER_WORKSPACE:-/workspace}
-      - PROXY_DOMAIN=${CODE_SERVER_PROXY_DOMAIN:-code.tuxito.be}
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/dev-tools.env
     volumes:
       - /mnt/proxmox_swarm_data/development-tools/code-server/config:/config:rw
       - /mnt/proxmox_swarm_data/development-tools/code-server/workspace:/workspace:rw
@@ -58,15 +52,8 @@ services:
         - "traefik.http.routers.docker-registry.tls.certresolver=letsencrypt"
         - "traefik.http.services.docker-registry.loadbalancer.server.port=5000"
         - "traefik.docker.network=traefik_public"
-    environment:
-      - REGISTRY_STORAGE_DELETE_ENABLED=true
-      - REGISTRY_HTTP_HEADERS_X-Content-Type-Options=[nosniff]
-      - REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin=['*']
-      - REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods=['HEAD','GET','OPTIONS','DELETE']
-      - REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers=['Authorization','Accept','Cache-Control']
-      - REGISTRY_HTTP_HEADERS_Access-Control-Max-Age=[1728000]
-      - REGISTRY_HTTP_HEADERS_Access-Control-Allow-Credentials=[true]
-      - REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers=['Docker-Content-Digest']
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/dev-tools.env
     volumes:
       - /mnt/proxmox_swarm_data/development-tools/docker-registry/data:/var/lib/registry:rw
     networks:

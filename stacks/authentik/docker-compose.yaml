@@ -8,17 +8,8 @@ services:
       - postgres_network
       - services
       - traefik_public
-    environment:
-      AUTHENTIK_POSTGRESQL__HOST: ${AUTHENTIK_POSTGRESQL__HOST}
-      AUTHENTIK_POSTGRESQL__PORT: ${AUTHENTIK_POSTGRESQL__PORT}
-      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_POSTGRESQL__NAME}
-      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_POSTGRESQL__USER}
-      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_POSTGRESQL__PASSWORD}
-      AUTHENTIK_REDIS__HOST: ${AUTHENTIK_REDIS__HOST}
-      AUTHENTIK_REDIS__PORT: ${AUTHENTIK_REDIS__PORT}
-      AUTHENTIK_REDIS__DB: ${AUTHENTIK_REDIS__DB}
-      AUTHENTIK_REDIS__PASSWORD: ${AUTHENTIK_REDIS__PASSWORD}
-      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/authentik.env
     volumes:
       - /mnt/proxmox_swarm_data/authentik/media:/media
       - /mnt/proxmox_swarm_data/authentik/custom-templates:/templates
@@ -55,17 +46,8 @@ services:
       - postgres_network
       - services
     user: "1000:1000"
-    environment:
-      AUTHENTIK_POSTGRESQL__HOST: ${AUTHENTIK_POSTGRESQL__HOST}
-      AUTHENTIK_POSTGRESQL__PORT: ${AUTHENTIK_POSTGRESQL__PORT}
-      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_POSTGRESQL__NAME}
-      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_POSTGRESQL__USER}
-      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_POSTGRESQL__PASSWORD}
-      AUTHENTIK_REDIS__HOST: ${AUTHENTIK_REDIS__HOST}
-      AUTHENTIK_REDIS__PORT: ${AUTHENTIK_REDIS__PORT}
-      AUTHENTIK_REDIS__DB: ${AUTHENTIK_REDIS__DB}
-      AUTHENTIK_REDIS__PASSWORD: ${AUTHENTIK_REDIS__PASSWORD}
-      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/authentik.env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /mnt/proxmox_swarm_data/authentik/media:/media

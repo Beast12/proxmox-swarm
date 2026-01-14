@@ -2,6 +2,7 @@ services:
   dockhand:
     image: fnsys/dockhand:latest
     restart: unless-stopped
+    user: "0:0"
     networks:
       - traefik_public
       - postgres_network

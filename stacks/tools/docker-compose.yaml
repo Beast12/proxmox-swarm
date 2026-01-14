@@ -51,8 +51,6 @@ services:
         - "traefik.http.routers.it-tools.tls.certresolver=letsencrypt"
         - "traefik.http.services.it-tools.loadbalancer.server.port=80"
         - "traefik.docker.network=traefik_public"
-    env_file:
-      - /mnt/proxmox_swarm_data/env-files/tools.env
     networks:
       - traefik_public
       - tools_internal
@@ -78,8 +76,6 @@ services:
         - "traefik.http.routers.qrding.tls.certresolver=letsencrypt"
         - "traefik.http.services.qrding.loadbalancer.server.port=3000"
         - "traefik.docker.network=traefik_public"
-    env_file:
-      - /mnt/proxmox_swarm_data/env-files/tools.env
     networks:
       - traefik_public
       - tools_internal
@@ -107,8 +103,6 @@ services:
         - "traefik.docker.network=traefik_public"
     volumes:
       - /mnt/proxmox_swarm_data/tools/freshrss:/config:rw
-    env_file:
-      - /mnt/proxmox_swarm_data/env-files/tools.env
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:80/ || exit 1"]
       interval: 30s

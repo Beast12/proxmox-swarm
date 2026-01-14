@@ -8,8 +8,13 @@ services:
     env_file:
       - /mnt/proxmox_swarm_data/env-files/dockhand.env
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /mnt/proxmox_swarm_data/dockhand/data:/app/data
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        read_only: true
+      - type: bind
+        source: /mnt/proxmox_swarm_data/dockhand/data
+        target: /app/data
     deploy:
       mode: replicated
       replicas: 1

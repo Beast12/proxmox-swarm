@@ -53,8 +53,8 @@ get_running_node() {
         awk '$2 ~ /^Running/ {print $1; exit}'
 }
 
-get_container_id() {
-    docker_cmd ps --filter "name=${SERVICE_NAME}.1" --format "{{.ID}}" 2>/dev/null | head -n 1
+get_container_name() {
+    docker_cmd ps --filter "name=${SERVICE_NAME}.1" --format "{{.Names}}" 2>/dev/null | head -n 1
 }
 
 ensure_remote_docker() {
@@ -64,7 +64,7 @@ ensure_remote_docker() {
     fi
     DOCKER_REMOTE_HOST="${DOCKER_SSH_USER}@${node}"
     export DOCKER_REMOTE_HOST
-    get_container_id
+    get_container_name
 }
 
 run_psql() {
@@ -74,18 +74,35 @@ run_psql() {
     if [ -n "$db_name" ]; then
         db_args=(-d "$db_name")
     fi
-    local container_id
-    container_id="$(get_container_id)"
-    if [ -z "$container_id" ]; then
+    local container_name
+    container_name="$(get_container_name)"
+    if [ -z "$container_name" ]; then
         local node
         node="$(get_running_node)"
-        if ! container_id="$(ensure_remote_docker "$node")" || [ -z "$container_id" ]; then
+        if ! container_name="$(ensure_remote_docker "$node")" || [ -z "$container_name" ]; then
             echo "Unable to find ${SERVICE_NAME} container locally or via ssh to ${node:-<unknown>}." 1>&2
             echo "Set DOCKER_HOST_OVERRIDE (e.g. tcp://host:2375) or DOCKER_SSH_USER to reach the node." 1>&2
             return 1
         fi
     fi
-    docker_cmd exec -i "$container_id" psql -v ON_ERROR_STOP=1 -U postgres "${db_args[@]}" -c "$sql"
+    local output
+    if ! output="$(docker_cmd exec -i "$container_name" psql -v ON_ERROR_STOP=1 -U postgres "${db_args[@]}" -c "$sql" 2>&1)"; then
+        if echo "$output" | grep -q "No such container"; then
+            container_name="$(get_container_name)"
+            if [ -n "$container_name" ]; then
+                output="$(docker_cmd exec -i "$container_name" psql -v ON_ERROR_STOP=1 -U postgres "${db_args[@]}" -c "$sql" 2>&1)" || {
+                    echo "$output"
+                    return 1
+                }
+                echo "$output"
+                return 0
+            fi
+        fi
+        echo "$output"
+        return 1
+    fi
+    echo "$output"
+    return 0
 }
 
 # Check if service exists
@@ -98,27 +115,51 @@ echo -e "${GREEN}✓ Service found${NC}\n"
 
 # Check if user exists
 echo -e "${YELLOW}→ Checking if user exists...${NC}"
-if run_psql "" "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}';" 2>&1 | grep -q "^1$"; then
+if ! user_check_output="$(run_psql "" "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}';" 2>&1)"; then
+    echo -e "${RED}✗ Failed to query roles${NC}"
+    echo "$user_check_output"
+    exit 1
+fi
+
+if echo "$user_check_output" | grep -q "^1$"; then
     echo -e "${YELLOW}  ⚠ User '$DB_USER' already exists${NC}"
     read -p "  Update password? (y/N): " -r
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo -e "${BLUE}  Skipping user${NC}\n"
     else
         echo -e "${YELLOW}  → Updating password...${NC}"
-        run_psql "" "ALTER USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';" 2>&1 | grep -q "ALTER ROLE" && \
-            echo -e "${GREEN}  ✓ Password updated${NC}\n" || \
-            echo -e "${RED}  ✗ Failed to update password${NC}\n"
+        if output="$(run_psql "" "ALTER USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';" 2>&1)"; then
+            echo "$output" | grep -q "ALTER ROLE" && \
+                echo -e "${GREEN}  ✓ Password updated${NC}\n" || \
+                echo -e "${GREEN}  ✓ Password updated${NC}\n"
+        else
+            echo -e "${RED}  ✗ Failed to update password${NC}"
+            echo "$output"
+            echo ""
+        fi
     fi
 else
     echo -e "${YELLOW}→ Creating user '$DB_USER'...${NC}"
-    run_psql "" "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';" 2>&1 | grep -q "CREATE ROLE" && \
-        echo -e "${GREEN}✓ User created${NC}\n" || \
-        echo -e "${RED}✗ Failed to create user${NC}\n"
+    if output="$(run_psql "" "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';" 2>&1)"; then
+        echo "$output" | grep -q "CREATE ROLE" && \
+            echo -e "${GREEN}✓ User created${NC}\n" || \
+            echo -e "${GREEN}✓ User created${NC}\n"
+    else
+        echo -e "${RED}✗ Failed to create user${NC}"
+        echo "$output"
+        echo ""
+    fi
 fi
 
 # Check if database exists
 echo -e "${YELLOW}→ Checking if database exists...${NC}"
-if run_psql "" "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}';" 2>&1 | grep -q "^1$"; then
+if ! db_check_output="$(run_psql "" "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}';" 2>&1)"; then
+    echo -e "${RED}✗ Failed to query databases${NC}"
+    echo "$db_check_output"
+    exit 1
+fi
+
+if echo "$db_check_output" | grep -q "^1$"; then
     echo -e "${BLUE}  ℹ Database '$DB_NAME' already exists${NC}\n"
 else
     echo -e "${YELLOW}→ Creating database '$DB_NAME'...${NC}"

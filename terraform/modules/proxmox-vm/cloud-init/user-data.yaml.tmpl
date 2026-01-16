@@ -1,44 +1,47 @@
 #cloud-config
 hostname: ${hostname}
+fqdn: ${hostname}
 manage_etc_hosts: true
 
 users:
   - name: koen
-    groups: [sudo, docker]
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin, docker, render, video
     shell: /bin/bash
-    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
     lock_passwd: false
     passwd: ${password_hash}
     ssh_authorized_keys:
-%{ for k in split("\n", ssh_public_keys) ~}
-      - ${k}
-%{ endfor ~}
+${ssh_public_keys}
 
-chpasswd:
-  expire: false
-
-package_update: true
 packages:
   - qemu-guest-agent
-  - ca-certificates
   - curl
-  - gnupg
-  - lsb-release
-  - jq
+  - wget
   - vim
   - git
   - htop
+  - net-tools
+  - nfs-common
+
+package_update: true
+package_upgrade: false
+
+mounts:
+  - ["192.168.10.10:/volume1/proxmox_swarm_data", "/mnt/proxmox_swarm_data", "nfs", "defaults", "0", "0"]
 
 runcmd:
-  - systemctl enable --now qemu-guest-agent
-  - |
-    set -e
-    apt-get update
-    apt-get install -y ca-certificates curl gnupg
-    install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/$(. /etc/os-release && echo "$ID")/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    chmod a+r /etc/apt/keyrings/docker.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$(. /etc/os-release && echo "$ID") $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list
-    apt-get update
-    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-  - systemctl enable --now docker
+  # Enable QEMU guest agent
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent
+  
+  # Mount NFS
+  - mkdir -p /mnt/proxmox_swarm_data
+  - mount -a
+  
+  # Install Docker
+  - curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+  - sh /tmp/get-docker.sh
+  - usermod -aG docker koen
+  
+  # Install standard kernel for GPU support (background job)
+  - nohup bash -c 'apt-get install -y linux-image-amd64 linux-headers-amd64 firmware-linux-nonfree && sed -i "s/^GRUB_DEFAULT=.*/GRUB_DEFAULT=0/" /etc/default/grub && update-grub && echo "i915" >> /etc/modules && shutdown -r +1' &

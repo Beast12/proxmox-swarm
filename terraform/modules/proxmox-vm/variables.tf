@@ -1,27 +1,93 @@
-variable "name" { type = string }
-variable "vmid" { type = number }
-variable "node_name" { type = string }
+variable "name" {
+  description = "VM name"
+  type        = string
+}
 
-variable "datastore" { type = string }
-variable "snippet_ds" { type = string }
+variable "vmid" {
+  description = "VM ID"
+  type        = number
+}
 
-variable "cores" { type = number }
-variable "memory" { type = number } # MB
-variable "disk_gb" { type = number }
+variable "node_name" {
+  description = "Proxmox node"
+  type        = string
+}
 
-variable "bridge" { type = string }
-variable "ip" { type = string }
-variable "gateway" { type = string }
-variable "dns" { type = list(string) }
+variable "datastore" {
+  description = "VM disk storage"
+  type        = string
+}
 
-variable "ssh_public_keys" { type = list(string) }
-variable "password_hash" { type = string }
+variable "snippet_ds" {
+  description = "Cloud-init snippet storage"
+  type        = string
+}
+
+variable "cores" {
+  description = "CPU cores"
+  type        = number
+}
+
+variable "memory" {
+  description = "Memory in MB"
+  type        = number
+}
+
+variable "disk_gb" {
+  description = "Disk size in GB"
+  type        = number
+}
+
+variable "bridge" {
+  description = "Network bridge"
+  type        = string
+}
+
+variable "ip" {
+  description = "IP address"
+  type        = string
+}
+
+variable "gateway" {
+  description = "Gateway"
+  type        = string
+}
+
+variable "dns" {
+  description = "DNS servers"
+  type        = list(string)
+}
+
+variable "ssh_public_keys" {
+  description = "SSH public keys"
+  type        = list(string)
+}
+
+variable "password_hash" {
+  description = "Password hash"
+  type        = string
+  sensitive   = true
+}
 
 variable "tags" {
-  type    = list(string)
-  default = []
+  description = "VM tags"
+  type        = list(string)
+  default     = []
 }
+
 variable "cloud_image_file_id" {
-  description = "File ID of the downloaded cloud image (e.g. local:iso/debian-13-genericcloud-amd64.img)."
+  description = "Cloud image file ID"
   type        = string
+}
+
+variable "machine_type" {
+  description = "Machine type (pc or q35 for GPU passthrough)"
+  type        = string
+  default     = "pc"
+}
+
+variable "gpu_passthrough" {
+  description = "Enable Intel Arc GPU passthrough"
+  type        = bool
+  default     = false
 }

@@ -1,14 +1,11 @@
 version: 2
 ethernets:
-  lan0:
-    match:
-      name: "e*"
-    dhcp4: false
+  eth0:
     addresses:
       - ${ip}/24
     gateway4: ${gateway}
     nameservers:
       addresses:
-%{ for d in dns ~}
-        - ${d}
+%{ for dns_server in dns ~}
+        - ${dns_server}
 %{ endfor ~}

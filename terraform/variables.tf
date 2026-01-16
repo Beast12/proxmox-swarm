@@ -1,67 +1,109 @@
+# ==============================================================================
+# PROXMOX CONNECTION
+# ==============================================================================
 variable "proxmox_endpoint" {
-  description = "Proxmox API endpoint, e.g. https://proxmox-1.lan:8006/"
+  description = "Proxmox API endpoint"
   type        = string
 }
 
 variable "proxmox_api_token" {
-  description = "Proxmox API token in form 'user@pam!token=secret'"
+  description = "Proxmox API token"
   type        = string
   sensitive   = true
 }
 
 variable "proxmox_insecure" {
-  description = "Allow insecure TLS to Proxmox API (self-signed)."
+  description = "Allow insecure TLS"
   type        = bool
   default     = true
 }
 
 variable "proxmox_nodes" {
-  description = "Proxmox node names (as seen by the API)."
+  description = "Proxmox node names"
   type        = list(string)
 }
 
-variable "default_vm_storage" {
-  description = "Datastore ID for VM disks."
+variable "proxmox_ssh_username" {
+  description = "SSH username for file uploads"
   type        = string
+  default     = "root"
 }
 
-variable "default_lxc_storage" {
-  description = "Storage ID for LXC rootfs."
+# ==============================================================================
+# STORAGE
+# ==============================================================================
+variable "default_vm_storage" {
+  description = "VM disk storage"
   type        = string
 }
 
 variable "snippet_storage" {
-  description = "Storage ID that supports snippets/files for cloud-init user-data."
+  description = "Cloud-init snippet storage"
   type        = string
 }
 
+variable "cloud_image_datastore" {
+  description = "Cloud image download storage"
+  type        = string
+  default     = "local"
+}
+
+variable "debian_cloud_image_url" {
+  description = "Debian cloud image URL"
+  type        = string
+  default     = "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2"
+}
+
+# ==============================================================================
+# NETWORK
+# ==============================================================================
 variable "lan_bridge" {
-  description = "Proxmox bridge name (e.g. vmbr0)."
+  description = "Network bridge"
   type        = string
 }
 
 variable "lan_gateway" {
-  description = "Default gateway for VMs/LXCs."
+  description = "Default gateway"
   type        = string
 }
 
 variable "lan_dns" {
-  description = "DNS servers."
+  description = "DNS servers"
   type        = list(string)
 }
 
+# ==============================================================================
+# SSH & AUTH
+# ==============================================================================
 variable "ssh_public_keys" {
-  description = "SSH public keys injected via cloud-init."
+  description = "SSH public keys for cloud-init"
   type        = list(string)
 }
 
 variable "vm_password_hash" {
-  description = "SHA-512 password hash for the cloud-init user."
+  description = "SHA-512 password hash"
+  type        = string
+  sensitive   = true
+}
+
+# ==============================================================================
+# DOMAIN
+# ==============================================================================
+variable "public_domain" {
+  description = "Base domain"
   type        = string
 }
 
+variable "acme_email" {
+  description = "Let's Encrypt email"
+  type        = string
+}
+
+# ==============================================================================
+# VM DEFINITIONS
+# ==============================================================================
 variable "swarm_managers" {
-  description = "Swarm manager VM definitions."
+  description = "Swarm manager VMs"
   type = map(object({
     vmid    = number
     node    = string
@@ -73,64 +115,14 @@ variable "swarm_managers" {
 }
 
 variable "swarm_workers" {
-  description = "Swarm worker VM definitions."
+  description = "Swarm worker VMs"
   type = map(object({
-    vmid    = number
-    node    = string
-    ip      = string
-    cores   = number
-    memory  = number
-    disk_gb = number
+    vmid            = number
+    node            = string
+    ip              = string
+    cores           = number
+    memory          = number
+    disk_gb         = number
+    gpu_passthrough = bool
   }))
-}
-
-variable "edge_lxcs" {
-  description = "Edge LXC definitions for load balancers."
-  type = map(object({
-    vmid    = number
-    node    = string
-    ip      = string
-    cores   = number
-    memory  = number
-    disk_gb = number
-  }))
-}
-
-variable "edge_vip" {
-  description = "VIP for Keepalived on edge LXCs."
-  type        = string
-}
-
-variable "public_domain" {
-  description = "Base domain for public endpoints."
-  type        = string
-}
-
-variable "acme_email" {
-  description = "Email for Let's Encrypt registration."
-  type        = string
-}
-
-variable "proxmox_ssh_username" {
-  description = "SSH username for node access used by provider file uploads."
-  type        = string
-  default     = "root"
-}
-
-variable "cloud_image_datastore" {
-  description = "Datastore where the cloud image file is downloaded (typically 'local' which supports ISO content)."
-  type        = string
-  default     = "local"
-}
-
-variable "debian_cloud_image_url" {
-  description = "URL to Debian generic cloud qcow2."
-  type        = string
-  default     = "https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2"
-}
-
-variable "debian_cloud_image_file_name" {
-  description = "Filename to store in Proxmox datastore."
-  type        = string
-  default     = "debian-13-genericcloud-amd64.img"
 }

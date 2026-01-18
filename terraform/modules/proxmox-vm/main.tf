@@ -56,6 +56,11 @@ resource "proxmox_virtual_environment_vm" "this" {
     enabled = true
   }
 
+  clone {
+    vm_id    = var.template_vm_id
+    node_name = var.template_vm_node_name
+  }
+
   cpu {
     cores = var.cores
     type  = "host"
@@ -65,11 +70,14 @@ resource "proxmox_virtual_environment_vm" "this" {
     dedicated = var.memory
   }
 
+  serial_device {
+    device = "socket"
+  }
+
   disk {
     datastore_id = var.datastore
     interface    = "scsi0"
     size         = var.disk_gb
-    file_id      = var.cloud_image_file_id
   }
 
   network_device {

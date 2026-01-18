@@ -42,17 +42,16 @@ variable "snippet_storage" {
   type        = string
 }
 
-variable "cloud_image_datastore" {
-  description = "Cloud image download storage"
-  type        = string
-  default     = "local"
+variable "template_vm_id" {
+  description = "Template VM ID to clone from"
+  type        = number
 }
 
-variable "debian_cloud_image_url" {
-  description = "Debian cloud image URL"
+variable "template_vm_node" {
+  description = "Proxmox node where the template VM exists"
   type        = string
-  default     = "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2"
 }
+
 
 # ==============================================================================
 # NETWORK

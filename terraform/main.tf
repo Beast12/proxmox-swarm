@@ -12,19 +12,6 @@ locals {
 }
 
 # ==============================================================================
-# CLOUD IMAGE DOWNLOAD
-# ==============================================================================
-resource "proxmox_virtual_environment_download_file" "debian_cloud" {
-  for_each = toset(var.proxmox_nodes)
-
-  node_name    = each.key
-  content_type = "iso"
-  datastore_id = var.cloud_image_datastore
-  file_name    = "debian-12-genericcloud-amd64.img"
-  url          = var.debian_cloud_image_url
-}
-
-# ==============================================================================
 # SWARM MANAGERS
 # ==============================================================================
 module "swarm_manager_vms" {
@@ -36,7 +23,8 @@ module "swarm_manager_vms" {
   node_name           = each.value.node
   datastore           = var.default_vm_storage
   snippet_ds          = var.snippet_storage
-  cloud_image_file_id = proxmox_virtual_environment_download_file.debian_cloud[each.value.node].id
+  template_vm_id      = var.template_vm_id
+  template_vm_node_name = var.template_vm_node
 
   cores   = each.value.cores
   memory  = each.value.memory
@@ -68,7 +56,8 @@ module "swarm_worker_vms" {
   node_name           = each.value.node
   datastore           = var.default_vm_storage
   snippet_ds          = var.snippet_storage
-  cloud_image_file_id = proxmox_virtual_environment_download_file.debian_cloud[each.value.node].id
+  template_vm_id      = var.template_vm_id
+  template_vm_node_name = var.template_vm_node
 
   cores   = each.value.cores
   memory  = each.value.memory

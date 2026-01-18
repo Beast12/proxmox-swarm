@@ -75,8 +75,13 @@ variable "tags" {
   default     = []
 }
 
-variable "cloud_image_file_id" {
-  description = "Cloud image file ID"
+variable "template_vm_id" {
+  description = "Template VM ID to clone from"
+  type        = number
+}
+
+variable "template_vm_node_name" {
+  description = "Proxmox node where the template VM exists"
   type        = string
 }
 

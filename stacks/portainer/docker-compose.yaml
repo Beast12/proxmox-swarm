@@ -30,7 +30,7 @@ services:
       - "9443:9443" # UI HTTPS
       - "9000:9000" # UI HTTP (optional, can remove later)
     volumes:
-      - /mnt/nfs/portainer:/data
+      - /mnt/proxmox_swarm_data/portainer:/data
     deploy:
       mode: replicated
       replicas: 1

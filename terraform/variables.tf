@@ -37,19 +37,20 @@ variable "default_vm_storage" {
   type        = string
 }
 
+variable "cloud_image_storage" {
+  description = "Storage for downloaded cloud images (must support import content type)"
+  type        = string
+}
+
 variable "snippet_storage" {
   description = "Cloud-init snippet storage"
   type        = string
 }
 
-variable "template_vm_id" {
-  description = "Template VM ID to clone from"
-  type        = number
-}
-
-variable "template_vm_node" {
-  description = "Proxmox node where the template VM exists"
+variable "ubuntu_cloud_image_url" {
+  description = "Ubuntu cloud image URL"
   type        = string
+  default     = "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img"
 }
 
 

@@ -23,6 +23,11 @@ variable "snippet_ds" {
   type        = string
 }
 
+variable "cloud_image_import_id" {
+  description = "Cloud image file ID for import"
+  type        = string
+}
+
 variable "cores" {
   description = "CPU cores"
   type        = number
@@ -73,16 +78,6 @@ variable "tags" {
   description = "VM tags"
   type        = list(string)
   default     = []
-}
-
-variable "template_vm_id" {
-  description = "Template VM ID to clone from"
-  type        = number
-}
-
-variable "template_vm_node_name" {
-  description = "Proxmox node where the template VM exists"
-  type        = string
 }
 
 variable "machine_type" {

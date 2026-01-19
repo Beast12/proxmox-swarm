@@ -9,6 +9,26 @@ locals {
     "managed-by-terraform",
     "env-${local.env}",
   ]
+
+  swarm_nodes = toset(distinct(concat(
+    [for manager in values(var.swarm_managers) : manager.node],
+    [for worker in values(var.swarm_workers) : worker.node]
+  )))
+
+  cloud_image_download_node   = sort(tolist(local.swarm_nodes))[0]
+  ubuntu_cloud_image_filename = replace(basename(var.ubuntu_cloud_image_url), ".img", ".qcow2")
+}
+
+# ==============================================================================
+# CLOUD IMAGE DOWNLOADS
+# ==============================================================================
+resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
+  node_name    = local.cloud_image_download_node
+  datastore_id = var.cloud_image_storage
+  content_type = "import"
+
+  url       = var.ubuntu_cloud_image_url
+  file_name = local.ubuntu_cloud_image_filename
 }
 
 # ==============================================================================
@@ -18,13 +38,12 @@ module "swarm_manager_vms" {
   for_each = var.swarm_managers
   source   = "./modules/proxmox-vm"
 
-  name                = "swarm-manager-${each.key}"
-  vmid                = each.value.vmid
-  node_name           = each.value.node
-  datastore           = var.default_vm_storage
-  snippet_ds          = var.snippet_storage
-  template_vm_id      = var.template_vm_id
-  template_vm_node_name = var.template_vm_node
+  name                  = "swarm-manager-${each.key}"
+  vmid                  = each.value.vmid
+  node_name             = each.value.node
+  datastore             = var.default_vm_storage
+  snippet_ds            = var.snippet_storage
+  cloud_image_import_id = proxmox_virtual_environment_download_file.ubuntu_cloud_image.id
 
   cores   = each.value.cores
   memory  = each.value.memory
@@ -51,13 +70,12 @@ module "swarm_worker_vms" {
   for_each = var.swarm_workers
   source   = "./modules/proxmox-vm"
 
-  name                = "swarm-worker-${each.key}"
-  vmid                = each.value.vmid
-  node_name           = each.value.node
-  datastore           = var.default_vm_storage
-  snippet_ds          = var.snippet_storage
-  template_vm_id      = var.template_vm_id
-  template_vm_node_name = var.template_vm_node
+  name                  = "swarm-worker-${each.key}"
+  vmid                  = each.value.vmid
+  node_name             = each.value.node
+  datastore             = var.default_vm_storage
+  snippet_ds            = var.snippet_storage
+  cloud_image_import_id = proxmox_virtual_environment_download_file.ubuntu_cloud_image.id
 
   cores   = each.value.cores
   memory  = each.value.memory
@@ -84,7 +102,6 @@ locals {
   swarm_data_dirs = [
     "authentik",
     "development-tools",
-    "dockhand",
     "env-files",
     "komodo",
     "monitoring",
@@ -111,8 +128,8 @@ resource "null_resource" "swarm_data_directories" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo mkdir -p /mnt/proxmox_swarm_data/${each.key}",
-      "sudo chown -R 1000:1000 /mnt/proxmox_swarm_data/${each.key}"
+      "if [ ! -d /mnt/proxmox_swarm_data/${each.key} ]; then sudo mkdir -p /mnt/proxmox_swarm_data/${each.key}; fi",
+      "if [ -d /mnt/proxmox_swarm_data/${each.key} ]; then sudo chown -R 1000:1000 /mnt/proxmox_swarm_data/${each.key} || true; fi"
     ]
   }
 

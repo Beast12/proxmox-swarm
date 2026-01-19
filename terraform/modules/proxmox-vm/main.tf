@@ -1,8 +1,6 @@
 locals {
   user_data_name    = "${var.name}-user-data.yaml"
-  network_data_name = "${var.name}-network-data.yaml"
 
-  ssh_keys_joined = join("\n", var.ssh_public_keys)
   dns_joined      = join(" ", var.dns)
 }
 
@@ -18,24 +16,9 @@ resource "proxmox_virtual_environment_file" "user_data" {
     file_name = local.user_data_name
     data = templatefile("${path.module}/cloud-init/user-data.yaml.tmpl", {
       hostname        = var.name
-      ssh_public_keys = local.ssh_keys_joined
+      ssh_public_keys = var.ssh_public_keys
       dns_servers     = local.dns_joined
       password_hash   = var.password_hash
-    })
-  }
-}
-
-resource "proxmox_virtual_environment_file" "network_data" {
-  node_name    = var.node_name
-  datastore_id = var.snippet_ds
-  content_type = "snippets"
-
-  source_raw {
-    file_name = local.network_data_name
-    data = templatefile("${path.module}/cloud-init/network-data.yaml.tmpl", {
-      ip      = var.ip
-      gateway = var.gateway
-      dns     = var.dns
     })
   }
 }
@@ -56,11 +39,6 @@ resource "proxmox_virtual_environment_vm" "this" {
     enabled = true
   }
 
-  clone {
-    vm_id    = var.template_vm_id
-    node_name = var.template_vm_node_name
-  }
-
   cpu {
     cores = var.cores
     type  = "host"
@@ -77,6 +55,7 @@ resource "proxmox_virtual_environment_vm" "this" {
   disk {
     datastore_id = var.datastore
     interface    = "scsi0"
+    import_from  = var.cloud_image_import_id
     size         = var.disk_gb
   }
 
@@ -96,7 +75,15 @@ resource "proxmox_virtual_environment_vm" "this" {
     }
   }
   initialization {
+    ip_config {
+      ipv4 {
+        address = "${var.ip}/24"
+        gateway = var.gateway
+      }
+    }
+    dns {
+      servers = var.dns
+    }
     user_data_file_id    = proxmox_virtual_environment_file.user_data.id
-    network_data_file_id = proxmox_virtual_environment_file.network_data.id
   }
 }

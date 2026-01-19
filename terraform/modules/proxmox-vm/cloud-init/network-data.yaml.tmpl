@@ -1,6 +1,9 @@
 version: 2
 ethernets:
   eth0:
+    match:
+      name: "en*"
+    set-name: eth0
     addresses:
       - ${ip}/24
     gateway4: ${gateway}

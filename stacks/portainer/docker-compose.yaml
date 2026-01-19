@@ -53,4 +53,4 @@ services:
         - "traefik.http.routers.portainer.tls.certresolver=letsencrypt"
         - "traefik.http.routers.portainer.service=portainer"
         - "traefik.http.services.portainer.loadbalancer.server.port=9000"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"

@@ -13,7 +13,7 @@ services:
       - hba_file=/etc/postgresql/pg_hba.conf
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - /mnt/proxmox_swarm_data/postgres-backups:/backups
+      - /mnt/postgres-backups:/backups
       - type: bind
         source: /mnt/proxmox_swarm_data/postgresql/postgresql.conf
         target: /etc/postgresql/postgresql.conf

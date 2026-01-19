@@ -5,6 +5,9 @@ services:
     networks:
       - proxy
 
+    secrets:
+      - dashboard_users_traefik
+
     ports:
       - target: 80
         published: 80

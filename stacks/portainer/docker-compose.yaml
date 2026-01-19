@@ -4,6 +4,8 @@ networks:
   portainer_net:
     driver: overlay
     attachable: true
+  proxy:
+    external: true
 
 services:
   agent:
@@ -51,7 +53,3 @@ services:
         - "traefik.http.routers.portainer.tls.certresolver=letsencrypt"
         - "traefik.http.services.portainer.loadbalancer.server.port=9000"
         - "traefik.docker.network=proxy"
-
-networks:
-  proxy:
-    external: true

@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   postgres:
-    image: postgis/postgis:17-3.4
+    image: postgres:18
     env_file:
       - /mnt/proxmox_swarm_data/env-files/postgresql.env
     command:
@@ -13,20 +13,20 @@ services:
       - hba_file=/etc/postgresql/pg_hba.conf
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - postgres_backups:/backups
+      - /mnt/proxmox_swarm_data/postgres-backups:/backups
       - type: bind
-        source: /mnt/postgres-config/postgresql.conf
+        source: /mnt/proxmox_swarm_data/postgresql/postgresql.conf
         target: /etc/postgresql/postgresql.conf
         read_only: true
       - type: bind
-        source: /mnt/postgres-config/pg_hba.conf
+        source: /mnt/proxmox_swarm_data/postgresql/pg_hba.conf
         target: /etc/postgresql/pg_hba.conf
         read_only: true
     networks:
       postgres_network:
         aliases:
           - postgres
-      traefik_public:
+      proxy:
     deploy:
       replicas: 1
       restart_policy:
@@ -40,7 +40,28 @@ services:
         - "traefik.tcp.routers.postgres.entrypoints=postgres"
         - "traefik.tcp.routers.postgres.service=postgres"
         - "traefik.tcp.services.postgres.loadbalancer.server.port=5432"
-
+  postgres_backup:
+    image: prodrigestivill/postgres-backup-local
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=ALL # or specific database
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - SCHEDULE=@daily
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=2
+      - BACKUP_KEEP_MONTHS=1
+    volumes:
+      - /mnt/postgres-backups:/backups
+    networks:
+      - postgres_network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.hostname == swarm-worker-w2
   postgres_exporter:
     image: prometheuscommunity/postgres-exporter:v0.15.0
     env_file:
@@ -49,7 +70,7 @@ services:
       - --config.file=/etc/postgres_exporter.yml
     volumes:
       - type: bind
-        source: /mnt/postgres-config/postgres_exporter.yml
+        source: /mnt/proxmox_swarm_data/postgresql/postgres_exporter.yml
         target: /etc/postgres_exporter.yml
         read_only: true
     networks:
@@ -68,7 +89,7 @@ services:
       - pgadmin_data:/var/lib/pgadmin
     networks:
       - postgres_network
-      - traefik_public
+      - proxy
     deploy:
       replicas: 1
       restart_policy:
@@ -80,14 +101,14 @@ services:
         - "traefik.http.routers.pgadmin.tls=true"
         - "traefik.http.routers.pgadmin.tls.certresolver=letsencrypt"
         - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
-        - "traefik.docker.network=traefik_public"
+        - "traefik.docker.network=proxy"
         # Middleware for X-Script-Name header
         - "traefik.http.middlewares.pgadmin-headers.headers.customrequestheaders.X-Script-Name=/pgadmin"
         - "traefik.http.routers.pgadmin.middlewares=pgadmin-headers"
 networks:
   postgres_network:
     external: true
-  traefik_public:
+  proxy:
     external: true
   monitoring:
     external: true
@@ -95,11 +116,5 @@ networks:
 volumes:
   postgres_data:
     driver: local
-  postgres_backups:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /mnt/postgres-backups
   pgadmin_data:
     driver: local

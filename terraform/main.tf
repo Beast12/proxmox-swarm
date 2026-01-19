@@ -140,6 +140,11 @@ locals {
   # Use first manager for directory creation
   target_manager_ip = values(module.swarm_manager_vms)[0].ipv4_address
   ssh_user          = "koen" # Update with your user
+
+  all_node_ips = concat(
+    [for manager in values(var.swarm_managers) : manager.ip],
+    [for worker in values(var.swarm_workers) : worker.ip]
+  )
 }
 
 resource "null_resource" "swarm_data_directories" {
@@ -159,6 +164,29 @@ resource "null_resource" "swarm_data_directories" {
   }
 
   depends_on = [module.swarm_manager_vms]
+}
+
+# ==============================================================================
+# NFS MOUNT: POSTGRES BACKUPS
+# ==============================================================================
+resource "null_resource" "postgres_backups_mount" {
+  for_each = toset(local.all_node_ips)
+
+  connection {
+    type = "ssh"
+    host = each.key
+    user = local.ssh_user
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mkdir -p /mnt/postgres-backups",
+      "grep -q '^192\\.168\\.10\\.10:/volume1/postgresql_backups /mnt/postgres-backups nfs' /etc/fstab || echo '192.168.10.10:/volume1/postgresql_backups /mnt/postgres-backups nfs defaults 0 0' | sudo tee -a /etc/fstab > /dev/null",
+      "sudo mount /mnt/postgres-backups || sudo mount -a"
+    ]
+  }
+
+  depends_on = [module.swarm_manager_vms, module.swarm_worker_vms]
 }
 
 # ==============================================================================

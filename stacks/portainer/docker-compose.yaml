@@ -27,9 +27,7 @@ services:
     command: -H tcp://tasks.agent:9001 --tlsskipverify
     networks:
       - portainer_net
-    ports:
-      - "9443:9443" # UI HTTPS
-      - "9000:9000" # UI HTTP (optional, can remove later)
+      - proxy
     volumes:
       - /mnt/proxmox_swarm_data/portainer:/data
       - /mnt/proxmox_swarm_data:/mnt/proxmox_swarm_data:ro
@@ -41,3 +39,19 @@ services:
           - node.role == manager
       restart_policy:
         condition: on-failure
+      labels:
+        - "homepage.group=Infrastructure"
+        - "homepage.name=Portainer"
+        - "homepage.icon=portainer.png"
+        - "homepage.href=https://portainer.tuxito.be"
+        - "homepage.description=Docker Management UI"
+        - "traefik.enable=true"
+        - "traefik.http.routers.portainer.rule=Host(`portainer.tuxito.be`)"
+        - "traefik.http.routers.portainer.entrypoints=websecure"
+        - "traefik.http.routers.portainer.tls.certresolver=letsencrypt"
+        - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+        - "traefik.docker.network=proxy"
+
+networks:
+  proxy:
+    external: true

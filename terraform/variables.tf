@@ -114,6 +114,32 @@ variable "docker_networks" {
 }
 
 # ==============================================================================
+# KEEPALIVED VIP
+# ==============================================================================
+variable "vip_address" {
+  description = "Virtual IP address (CIDR) for keepalived"
+  type        = string
+}
+
+variable "vip_interface" {
+  description = "Network interface for keepalived (e.g. ens18)"
+  type        = string
+  default     = "ens18"
+}
+
+variable "vip_router_id" {
+  description = "VRRP virtual router ID"
+  type        = number
+  default     = 51
+}
+
+variable "vip_auth_pass" {
+  description = "VRRP authentication password (max 8 chars)"
+  type        = string
+  sensitive   = true
+}
+
+# ==============================================================================
 # VM DEFINITIONS
 # ==============================================================================
 variable "swarm_managers" {

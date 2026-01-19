@@ -17,6 +17,31 @@ locals {
 
   cloud_image_download_node   = sort(tolist(local.swarm_nodes))[0]
   ubuntu_cloud_image_filename = replace(basename(var.ubuntu_cloud_image_url), ".img", ".qcow2")
+
+  manager_keys = sort(keys(var.swarm_managers))
+  keepalived_priority = {
+    for idx, key in local.manager_keys : key => 150 - (idx * 20)
+  }
+  keepalived_state = {
+    for idx, key in local.manager_keys : key => idx == 0 ? "MASTER" : "BACKUP"
+  }
+  keepalived_peer_ips = {
+    for key, manager in var.swarm_managers :
+    key => [for other_key, other in var.swarm_managers : other.ip if other_key != key]
+  }
+  keepalived_config = {
+    for key in local.manager_keys :
+    key => templatefile("${path.module}/templates/keepalived.conf.tmpl", {
+      state       = local.keepalived_state[key]
+      interface   = var.vip_interface
+      router_id   = var.vip_router_id
+      priority    = local.keepalived_priority[key]
+      src_ip      = var.swarm_managers[key].ip
+      peer_ips    = local.keepalived_peer_ips[key]
+      auth_pass   = var.vip_auth_pass
+      vip_address = var.vip_address
+    })
+  }
 }
 
 # ==============================================================================
@@ -130,6 +155,35 @@ resource "null_resource" "swarm_data_directories" {
     inline = [
       "if [ ! -d /mnt/proxmox_swarm_data/${each.key} ]; then sudo mkdir -p /mnt/proxmox_swarm_data/${each.key}; fi",
       "if [ -d /mnt/proxmox_swarm_data/${each.key} ]; then sudo chown -R 1000:1000 /mnt/proxmox_swarm_data/${each.key} || true; fi"
+    ]
+  }
+
+  depends_on = [module.swarm_manager_vms]
+}
+
+# ==============================================================================
+# KEEPALIVED VIP ON MANAGERS
+# ==============================================================================
+resource "null_resource" "keepalived" {
+  for_each = var.swarm_managers
+
+  triggers = {
+    config_hash = sha256(local.keepalived_config[each.key])
+  }
+
+  connection {
+    type = "ssh"
+    host = each.value.ip
+    user = local.ssh_user
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update -y",
+      "sudo apt-get install -y keepalived",
+      "sudo mkdir -p /etc/keepalived",
+      "cat <<'EOF' | sudo tee /etc/keepalived/keepalived.conf > /dev/null\n${local.keepalived_config[each.key]}\nEOF",
+      "sudo systemctl enable --now keepalived"
     ]
   }
 

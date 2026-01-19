@@ -1,0 +1,23 @@
+vrrp_instance VI_1 {
+  state ${state}
+  interface ${interface}
+  virtual_router_id ${router_id}
+  priority ${priority}
+  advert_int 1
+
+  unicast_src_ip ${src_ip}
+  unicast_peer {
+%{ for ip in peer_ips ~}
+    ${ip}
+%{ endfor ~}
+  }
+
+  authentication {
+    auth_type PASS
+    auth_pass ${auth_pass}
+  }
+
+  virtual_ipaddress {
+    ${vip_address}
+  }
+}

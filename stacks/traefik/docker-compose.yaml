@@ -49,7 +49,7 @@ services:
       - "--providers.swarm.endpoint=unix:///var/run/docker.sock"
       - "--providers.swarm.watch=true"
       - "--providers.swarm.exposedbydefault=false"
-      - "--providers.swarm.network=traefik_traefik_public"
+      - "--providers.swarm.network=proxy"
 
       # Dashboard
       - "--api.dashboard=true"
@@ -98,7 +98,6 @@ services:
         - "traefik.http.routers.dashboard.tls.domains[0].sans=*.${DOMAIN}"
 
         # Dashboard Authentication
-        - "traefik.http.middlewares.dashboard-auth.basicauth.usersfile=/run/secrets/dashboard_users_traefik"
         - "traefik.http.routers.dashboard.middlewares=dashboard-auth@swarm"
 
         # Required for Swarm - specify port for the API
@@ -111,7 +110,3 @@ networks:
 volumes:
   traefik-certificates:
     driver: local
-
-secrets:
-  dashboard_users_traefik:
-    external: true

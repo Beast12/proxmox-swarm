@@ -1,7 +1,7 @@
 locals {
-  user_data_name    = "${var.name}-user-data.yaml"
+  user_data_name = "${var.name}-user-data.yaml"
 
-  dns_joined      = join(" ", var.dns)
+  dns_joined = join(" ", var.dns)
 }
 
 # ==============================================================================
@@ -84,6 +84,6 @@ resource "proxmox_virtual_environment_vm" "this" {
     dns {
       servers = var.dns
     }
-    user_data_file_id    = proxmox_virtual_environment_file.user_data.id
+    user_data_file_id = proxmox_virtual_environment_file.user_data.id
   }
 }

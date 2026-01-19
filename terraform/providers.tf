@@ -10,6 +10,10 @@ terraform {
       source  = "hashicorp/null"
       version = "~> 3.2"
     }
+    docker = {
+      source  = "kreuzwerker/docker"
+      version = "~> 3.0"
+    }
   }
 }
 
@@ -22,4 +26,8 @@ provider "proxmox" {
     agent    = true
     username = var.proxmox_ssh_username
   }
+}
+
+provider "docker" {
+  host = var.docker_host
 }

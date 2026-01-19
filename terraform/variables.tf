@@ -100,6 +100,20 @@ variable "acme_email" {
 }
 
 # ==============================================================================
+# DOCKER
+# ==============================================================================
+variable "docker_host" {
+  description = "Docker host for network management (e.g. unix:///var/run/docker.sock or tcp://host:2376)"
+  type        = string
+}
+
+variable "docker_networks" {
+  description = "Docker networks to create"
+  type        = list(string)
+  default     = []
+}
+
+# ==============================================================================
 # VM DEFINITIONS
 # ==============================================================================
 variable "swarm_managers" {

@@ -167,8 +167,7 @@ services:
         - "traefik.http.services.stirling-pdf.loadbalancer.server.port=8080"
         - "traefik.docker.network=proxy"
     volumes:
-      - /mnt/proxmox_swarm_data/tools/stirling-pdf/data:/usr/share/tessdata:rw
-      - /mnt/proxmox_swarm_data/tools/stirling-pdf/config:/configs:rw
+      - /mnt/proxmox_swarm_data/tools/stirling-pdf:/configs:rw
     env_file:
       - /mnt/proxmox_swarm_data/env-files/stirling_pdf.env
     healthcheck:

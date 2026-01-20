@@ -92,7 +92,9 @@ docker_target_cmd() {
 
 get_container_name_on_target() {
     local target_host="$1"
-    docker_target_cmd "$target_host" ps --filter "name=${SERVICE_NAME}.1" --format "{{.Names}}" 2>/dev/null | head -n 1
+    docker_target_cmd "$target_host" ps \
+        --filter "label=com.docker.swarm.service.name=${SERVICE_NAME}" \
+        --format "{{.Names}}" 2>/dev/null | head -n 1
 }
 
 run_psql() {

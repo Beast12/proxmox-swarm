@@ -190,6 +190,34 @@ resource "null_resource" "postgres_backups_mount" {
 }
 
 # ==============================================================================
+# CIFS MOUNT: HOME ASSISTANT CONFIG
+# ==============================================================================
+resource "null_resource" "ha_config_mount" {
+  for_each = toset(local.all_node_ips)
+
+  connection {
+    type = "ssh"
+    host = each.key
+    user = local.ssh_user
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mkdir -p /mnt/ha-config",
+      "sudo install -d -m 700 /root",
+      "sudo apt-get update -y",
+      "sudo apt-get install -y cifs-utils",
+      "cat <<'EOF' | sudo tee /root/.smb-ha > /dev/null\nusername=${var.ha_smb_username}\npassword=${var.ha_smb_password}\ndomain=${var.ha_smb_domain}\nEOF",
+      "sudo chmod 600 /root/.smb-ha",
+      "grep -q '^//192\\.168\\.10\\.28/config /mnt/ha-config cifs' /etc/fstab || echo '//192.168.10.28/config /mnt/ha-config cifs vers=3.0,sec=ntlmssp,credentials=/root/.smb-ha,uid=100000,gid=100000,file_mode=0777,dir_mode=0777,noperm,_netdev 0 0' | sudo tee -a /etc/fstab > /dev/null",
+      "mountpoint -q /mnt/ha-config || sudo mount /mnt/ha-config"
+    ]
+  }
+
+  depends_on = [module.swarm_manager_vms, module.swarm_worker_vms]
+}
+
+# ==============================================================================
 # KEEPALIVED VIP ON MANAGERS
 # ==============================================================================
 resource "null_resource" "keepalived" {

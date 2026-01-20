@@ -140,6 +140,27 @@ variable "vip_auth_pass" {
 }
 
 # ==============================================================================
+# CIFS MOUNT: HOME ASSISTANT CONFIG
+# ==============================================================================
+variable "ha_smb_username" {
+  description = "SMB username for Home Assistant share"
+  type        = string
+  sensitive   = true
+}
+
+variable "ha_smb_password" {
+  description = "SMB password for Home Assistant share"
+  type        = string
+  sensitive   = true
+}
+
+variable "ha_smb_domain" {
+  description = "SMB domain for Home Assistant share"
+  type        = string
+  default     = "WORKGROUP"
+}
+
+# ==============================================================================
 # VM DEFINITIONS
 # ==============================================================================
 variable "swarm_managers" {

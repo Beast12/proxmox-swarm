@@ -19,7 +19,7 @@ services:
         - "traefik.http.routers.code-server.entrypoints=websecure"
         - "traefik.http.routers.code-server.tls.certresolver=letsencrypt"
         - "traefik.http.services.code-server.loadbalancer.server.port=8443"
-        - "traefik.docker.network=traefik_public"
+        - "traefik.docker.network=proxy"
     env_file:
       - /mnt/proxmox_swarm_data/env-files/dev-tools.env
     volumes:
@@ -28,7 +28,7 @@ services:
       - /mnt/ha-config:/config/workspace/homeassistant:rw
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
-      - traefik_public
+      - proxy
       - dev_internal
 
   docker-registry:
@@ -51,17 +51,17 @@ services:
         - "traefik.http.routers.docker-registry.entrypoints=websecure"
         - "traefik.http.routers.docker-registry.tls.certresolver=letsencrypt"
         - "traefik.http.services.docker-registry.loadbalancer.server.port=5000"
-        - "traefik.docker.network=traefik_public"
+        - "traefik.docker.network=proxy"
     env_file:
       - /mnt/proxmox_swarm_data/env-files/dev-tools.env
     volumes:
       - /mnt/proxmox_swarm_data/development-tools/docker-registry/data:/var/lib/registry:rw
     networks:
-      - traefik_public
+      - proxy
       - dev_internal
 
 networks:
-  traefik_public:
+  proxy:
     external: true
   dev_internal:
     driver: overlay

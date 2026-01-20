@@ -169,7 +169,6 @@ services:
     volumes:
       - /mnt/proxmox_swarm_data/tools/stirling-pdf/data:/usr/share/tessdata:rw
       - /mnt/proxmox_swarm_data/tools/stirling-pdf/config:/configs:rw
-      - /mnt/proxmox_swarm_data/tools/stirling-pdf/logs:/logs:rw
     env_file:
       - /mnt/proxmox_swarm_data/env-files/stirling_pdf.env
     healthcheck:

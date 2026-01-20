@@ -142,6 +142,7 @@ services:
 
   stirling-pdf:
     image: stirlingtools/stirling-pdf:latest-fat
+    user: "0:0"
     deploy:
       mode: replicated
       replicas: 1

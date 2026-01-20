@@ -71,6 +71,12 @@ get_target_docker_host() {
         echo ""
         return 0
     fi
+    local node_addr
+    node_addr="$(docker_cmd node inspect "$node" --format '{{.Status.Addr}}' 2>/dev/null || true)"
+    if [ -n "$node_addr" ]; then
+        echo "ssh://${DOCKER_SSH_USER}@${node_addr}"
+        return 0
+    fi
     echo "ssh://${DOCKER_SSH_USER}@${node}"
 }
 

@@ -7,7 +7,7 @@ services:
     networks:
       - postgres_network
       - services
-      - traefik_public
+      - proxy
     env_file:
       - /mnt/proxmox_swarm_data/env-files/authentik.env
     volumes:
@@ -27,7 +27,7 @@ services:
         - "homepage.href=https://sso.tuxito.be"
         - "homepage.description=SSO & Identity Provider"
         - "traefik.enable=true"
-        - "traefik.docker.network=traefik_public"
+        - "traefik.docker.network=proxy"
         # Main router
         - "traefik.http.routers.authentik.rule=Host(`sso.tuxito.be`)"
         - "traefik.http.routers.authentik.entrypoints=websecure"
@@ -66,5 +66,5 @@ networks:
     external: true
   services:
     external: true
-  traefik_public:
+  proxy:
     external: true

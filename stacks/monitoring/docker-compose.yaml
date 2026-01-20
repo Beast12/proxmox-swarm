@@ -7,7 +7,7 @@ services:
       - apparmor:unconfined
     networks:
       - monitoring
-      - traefik_public
+      - proxy
     volumes:
       - /mnt/proxmox_swarm_data/monitoring/config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - /mnt/proxmox_swarm_data/monitoring/config/prometheus/rules:/etc/prometheus/rules:ro
@@ -39,7 +39,7 @@ services:
         - "traefik.http.routers.prometheus.entrypoints=websecure"
         - "traefik.http.routers.prometheus.tls.certresolver=letsencrypt"
         - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
-        - "traefik.docker.network=traefik_public"
+        - "traefik.docker.network=proxy"
     depends_on:
       - pve-exporter
       - cadvisor
@@ -52,7 +52,7 @@ services:
       - apparmor:unconfined
     networks:
       - monitoring
-      - traefik_public
+      - proxy
     volumes:
       - /mnt/proxmox_swarm_data/monitoring/config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - /mnt/proxmox_swarm_data/monitoring/data/alertmanager:/alertmanager:rw
@@ -79,7 +79,7 @@ services:
         - "traefik.http.routers.alertmanager.entrypoints=websecure"
         - "traefik.http.routers.alertmanager.tls.certresolver=letsencrypt"
         - "traefik.http.services.alertmanager.loadbalancer.server.port=9093"
-        - "traefik.docker.network=traefik_public"
+        - "traefik.docker.network=proxy"
 
   grafana:
     image: grafana/grafana:latest
@@ -88,7 +88,7 @@ services:
       - apparmor:unconfined
     networks:
       - monitoring
-      - traefik_public
+      - proxy
     environment:
       - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel,grafana-clock-panel
     volumes:
@@ -113,7 +113,7 @@ services:
         - "traefik.http.routers.grafana.entrypoints=websecure"
         - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
         - "traefik.http.services.grafana.loadbalancer.server.port=3000"
-        - "traefik.docker.network=traefik_public"
+        - "traefik.docker.network=proxy"
 
   loki:
     image: grafana/loki:latest
@@ -278,5 +278,5 @@ services:
 networks:
   monitoring:
     external: true
-  traefik_public:
+  proxy:
     external: true

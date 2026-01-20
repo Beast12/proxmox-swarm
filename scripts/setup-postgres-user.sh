@@ -51,6 +51,20 @@ get_running_node() {
         awk '$2 ~ /^Running/ {print $1; exit}'
 }
 
+get_running_task_id() {
+    docker_cmd service ps "$SERVICE_NAME" --no-trunc --format "{{.ID}} {{.CurrentState}}" 2>/dev/null | \
+        awk '$2 ~ /^Running/ {print $1; exit}'
+}
+
+get_container_id_from_task() {
+    local task_id
+    task_id="$(get_running_task_id)"
+    if [ -z "$task_id" ]; then
+        return 1
+    fi
+    docker_cmd inspect --type task --format '{{.Status.ContainerStatus.ContainerID}}' "$task_id" 2>/dev/null || true
+}
+
 get_local_node_name() {
     docker_cmd info -f "{{.Name}}" 2>/dev/null || true
 }
@@ -92,6 +106,12 @@ docker_target_cmd() {
 
 get_container_name_on_target() {
     local target_host="$1"
+    local container_id
+    container_id="$(get_container_id_from_task)"
+    if [ -n "$container_id" ]; then
+        echo "$container_id"
+        return 0
+    fi
     docker_target_cmd "$target_host" ps \
         --filter "label=com.docker.swarm.service.name=${SERVICE_NAME}" \
         --format "{{.Names}}" 2>/dev/null | head -n 1

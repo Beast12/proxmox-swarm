@@ -21,13 +21,13 @@ services:
         - "traefik.http.routers.convertx.entrypoints=websecure"
         - "traefik.http.routers.convertx.tls.certresolver=letsencrypt"
         - "traefik.http.services.convertx.loadbalancer.server.port=3000"
-        - "traefik.docker.network=traefik_public"
+        - "traefik.docker.network=proxy"
     env_file:
       - /mnt/proxmox_swarm_data/env-files/convertx.env
     volumes:
       - /mnt/proxmox_swarm_data/tools/convertx:/app/data
     networks:
-      - traefik_public
+      - proxy
       - tools_internal
 
   it-tools:
@@ -50,9 +50,9 @@ services:
         - "traefik.http.routers.it-tools.entrypoints=websecure"
         - "traefik.http.routers.it-tools.tls.certresolver=letsencrypt"
         - "traefik.http.services.it-tools.loadbalancer.server.port=80"
-        - "traefik.docker.network=traefik_public"
+        - "traefik.docker.network=proxy"
     networks:
-      - traefik_public
+      - proxy
       - tools_internal
 
   qrding:
@@ -75,9 +75,9 @@ services:
         - "traefik.http.routers.qrding.entrypoints=websecure"
         - "traefik.http.routers.qrding.tls.certresolver=letsencrypt"
         - "traefik.http.services.qrding.loadbalancer.server.port=3000"
-        - "traefik.docker.network=traefik_public"
+        - "traefik.docker.network=proxy"
     networks:
-      - traefik_public
+      - proxy
       - tools_internal
 
   freshrss:
@@ -100,7 +100,7 @@ services:
         - "traefik.http.routers.freshrss.entrypoints=websecure"
         - "traefik.http.routers.freshrss.tls.certresolver=letsencrypt"
         - "traefik.http.services.freshrss.loadbalancer.server.port=80"
-        - "traefik.docker.network=traefik_public"
+        - "traefik.docker.network=proxy"
     volumes:
       - /mnt/proxmox_swarm_data/tools/freshrss:/config:rw
     healthcheck:
@@ -110,7 +110,7 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - traefik_public
+      - proxy
       - tools_internal
 
   pairdrop:
@@ -133,11 +133,11 @@ services:
         - "traefik.http.routers.pairdrop.entrypoints=websecure"
         - "traefik.http.routers.pairdrop.tls.certresolver=letsencrypt"
         - "traefik.http.services.pairdrop.loadbalancer.server.port=3000"
-        - "traefik.docker.network=traefik_public"
+        - "traefik.docker.network=proxy"
     env_file:
       - /mnt/proxmox_swarm_data/env-files/pairdrop.env
     networks:
-      - traefik_public
+      - proxy
       - tools_internal
 
   stirling-pdf:
@@ -165,7 +165,7 @@ services:
         - "traefik.http.routers.stirling-pdf.entrypoints=websecure"
         - "traefik.http.routers.stirling-pdf.tls.certresolver=letsencrypt"
         - "traefik.http.services.stirling-pdf.loadbalancer.server.port=8080"
-        - "traefik.docker.network=traefik_public"
+        - "traefik.docker.network=proxy"
     volumes:
       - /mnt/proxmox_swarm_data/tools/stirling-pdf/data:/usr/share/tessdata:rw
       - /mnt/proxmox_swarm_data/tools/stirling-pdf/config:/configs:rw
@@ -183,7 +183,7 @@ services:
       retries: 3
       start_period: 90s
     networks:
-      - traefik_public
+      - proxy
       - tools_internal
 
   cronmaster:
@@ -210,7 +210,7 @@ services:
         - "traefik.http.routers.cronmaster.entrypoints=websecure"
         - "traefik.http.routers.cronmaster.tls.certresolver=letsencrypt"
         - "traefik.http.services.cronmaster.loadbalancer.server.port=3000"
-        - "traefik.docker.network=traefik_public"
+        - "traefik.docker.network=proxy"
     env_file:
       - /mnt/proxmox_swarm_data/env-files/cronmaster.env
     volumes:
@@ -220,11 +220,11 @@ services:
       - /mnt/proxmox_swarm_data/tools/cronmaster/ssh:/root/.ssh
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
-      - traefik_public
+      - proxy
       - tools_internal
 
 networks:
-  traefik_public:
+  proxy:
     external: true
   tools_internal:
     driver: overlay

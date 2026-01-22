@@ -145,6 +145,16 @@ locals {
     [for manager in values(var.swarm_managers) : manager.ip],
     [for worker in values(var.swarm_workers) : worker.ip]
   )
+
+  plex_media_mounts = [
+    { src = "192.168.10.9:/volume1/Movies", dest = "/mnt/nfs/media-nas/movies" },
+    { src = "192.168.10.9:/volume1/Series", dest = "/mnt/nfs/media-nas/tv" },
+    { src = "192.168.10.9:/volume1/Music", dest = "/mnt/nfs/media-nas/music" },
+    { src = "192.168.10.9:/volume1/Cartoons", dest = "/mnt/nfs/media-nas/cartoons" },
+    { src = "192.168.10.9:/volume1/Comedy", dest = "/mnt/nfs/media-nas/comedy" },
+    { src = "192.168.10.9:/volume1/Audiobooks", dest = "/mnt/nfs/media-nas/audiobooks" },
+    { src = "192.168.10.9:/volume1/Comics", dest = "/mnt/nfs/media-nas/comics" }
+  ]
 }
 
 resource "null_resource" "swarm_data_directories" {
@@ -211,6 +221,33 @@ resource "null_resource" "ha_config_mount" {
       "sudo chmod 600 /root/.smb-ha",
       "grep -q '^//192\\.168\\.10\\.28/config /mnt/ha-config cifs' /etc/fstab || echo '//192.168.10.28/config /mnt/ha-config cifs vers=3.0,sec=ntlmssp,credentials=/root/.smb-ha,uid=100000,gid=100000,file_mode=0777,dir_mode=0777,noperm,_netdev 0 0' | sudo tee -a /etc/fstab > /dev/null",
       "mountpoint -q /mnt/ha-config || sudo mount /mnt/ha-config"
+    ]
+  }
+
+  depends_on = [module.swarm_manager_vms, module.swarm_worker_vms]
+}
+
+# ==============================================================================
+# NFS MOUNTS: PLEX MEDIA (AUTOMOUNT)
+# ==============================================================================
+resource "null_resource" "plex_media_mounts" {
+  for_each = toset(local.all_node_ips)
+
+  connection {
+    type = "ssh"
+    host = each.key
+    user = local.ssh_user
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mkdir -p /mnt/nfs/media-nas",
+      %{ for mount in local.plex_media_mounts ~}
+      "sudo mkdir -p ${mount.dest}",
+      "grep -q '^${mount.src} ${mount.dest} nfs' /etc/fstab || echo '${mount.src} ${mount.dest} nfs defaults,nfsvers=3,rw,_netdev,nofail,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.device-timeout=30s 0 0' | sudo tee -a /etc/fstab > /dev/null",
+      %{ endfor ~}
+      "sudo systemctl daemon-reload",
+      "for mp in /mnt/nfs/media-nas/*; do mountpoint -q \"$mp\" || sudo mount \"$mp\" || true; done"
     ]
   }
 

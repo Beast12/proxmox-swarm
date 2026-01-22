@@ -5,6 +5,8 @@ networks:
     external: true
   productivity-nw:
     driver: overlay
+  services:
+    external: true
 
 services:
   # FossFLOW - 3D diagrams

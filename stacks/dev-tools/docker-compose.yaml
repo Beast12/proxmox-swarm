@@ -51,12 +51,6 @@ services:
         - "traefik.http.routers.docker-registry.entrypoints=websecure"
         - "traefik.http.routers.docker-registry.tls.certresolver=letsencrypt"
         - "traefik.http.services.docker-registry.loadbalancer.server.port=5000"
-        # Add these timeout settings
-        - "traefik.http.services.docker-registry.loadbalancer.server.transport=registry-transport"
-        - "traefik.http.services.docker-registry.loadbalancer.passhostheader=true"
-        - "traefik.http.middlewares.registry-timeout.buffering.maxRequestBodyBytes=2147483648" # 2GB
-        - "traefik.http.middlewares.registry-timeout.buffering.memRequestBodyBytes=104857600" # 100MB
-        - "traefik.http.routers.docker-registry.middlewares=registry-timeout"
         - "traefik.docker.network=proxy"
     env_file:
       - /mnt/proxmox_swarm_data/env-files/dev-tools.env

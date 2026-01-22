@@ -27,7 +27,7 @@ services:
         - "homepage.href=https://sso.tuxito.be"
         - "homepage.description=SSO & Identity Provider"
         - "traefik.enable=true"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"
         # Main router
         - "traefik.http.routers.authentik.rule=Host(`sso.tuxito.be`)"
         - "traefik.http.routers.authentik.entrypoints=websecure"

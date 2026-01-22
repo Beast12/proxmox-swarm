@@ -21,7 +21,7 @@ services:
         - "traefik.http.routers.convertx.entrypoints=websecure"
         - "traefik.http.routers.convertx.tls.certresolver=letsencrypt"
         - "traefik.http.services.convertx.loadbalancer.server.port=3000"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"
     env_file:
       - /mnt/proxmox_swarm_data/env-files/convertx.env
     volumes:
@@ -50,7 +50,7 @@ services:
         - "traefik.http.routers.it-tools.entrypoints=websecure"
         - "traefik.http.routers.it-tools.tls.certresolver=letsencrypt"
         - "traefik.http.services.it-tools.loadbalancer.server.port=80"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"
     networks:
       - proxy
       - tools_internal
@@ -75,7 +75,7 @@ services:
         - "traefik.http.routers.qrding.entrypoints=websecure"
         - "traefik.http.routers.qrding.tls.certresolver=letsencrypt"
         - "traefik.http.services.qrding.loadbalancer.server.port=3000"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"
     networks:
       - proxy
       - tools_internal
@@ -100,7 +100,7 @@ services:
         - "traefik.http.routers.freshrss.entrypoints=websecure"
         - "traefik.http.routers.freshrss.tls.certresolver=letsencrypt"
         - "traefik.http.services.freshrss.loadbalancer.server.port=80"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"
     volumes:
       - /mnt/proxmox_swarm_data/tools/freshrss:/config:rw
     healthcheck:
@@ -133,7 +133,7 @@ services:
         - "traefik.http.routers.pairdrop.entrypoints=websecure"
         - "traefik.http.routers.pairdrop.tls.certresolver=letsencrypt"
         - "traefik.http.services.pairdrop.loadbalancer.server.port=3000"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"
     env_file:
       - /mnt/proxmox_swarm_data/env-files/pairdrop.env
     networks:
@@ -166,7 +166,7 @@ services:
         - "traefik.http.routers.stirling-pdf.entrypoints=websecure"
         - "traefik.http.routers.stirling-pdf.tls.certresolver=letsencrypt"
         - "traefik.http.services.stirling-pdf.loadbalancer.server.port=8080"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"
     volumes:
       - /mnt/proxmox_swarm_data/tools/stirling-pdf:/configs:rw
     env_file:
@@ -209,7 +209,7 @@ services:
         - "traefik.http.routers.cronmaster.entrypoints=websecure"
         - "traefik.http.routers.cronmaster.tls.certresolver=letsencrypt"
         - "traefik.http.services.cronmaster.loadbalancer.server.port=3000"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"
     env_file:
       - /mnt/proxmox_swarm_data/env-files/cronmaster.env
     volumes:

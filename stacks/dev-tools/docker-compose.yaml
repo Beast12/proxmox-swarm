@@ -19,7 +19,7 @@ services:
         - "traefik.http.routers.code-server.entrypoints=websecure"
         - "traefik.http.routers.code-server.tls.certresolver=letsencrypt"
         - "traefik.http.services.code-server.loadbalancer.server.port=8443"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"
     env_file:
       - /mnt/proxmox_swarm_data/env-files/dev-tools.env
     volumes:

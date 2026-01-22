@@ -101,7 +101,7 @@ services:
         - "traefik.http.routers.pgadmin.tls=true"
         - "traefik.http.routers.pgadmin.tls.certresolver=letsencrypt"
         - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"
         # Middleware for X-Script-Name header
         - "traefik.http.middlewares.pgadmin-headers.headers.customrequestheaders.X-Script-Name=/pgadmin"
         - "traefik.http.routers.pgadmin.middlewares=pgadmin-headers"

@@ -39,7 +39,7 @@ services:
         - "traefik.http.routers.prometheus.entrypoints=websecure"
         - "traefik.http.routers.prometheus.tls.certresolver=letsencrypt"
         - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"
     depends_on:
       - pve-exporter
       - cadvisor
@@ -79,7 +79,7 @@ services:
         - "traefik.http.routers.alertmanager.entrypoints=websecure"
         - "traefik.http.routers.alertmanager.tls.certresolver=letsencrypt"
         - "traefik.http.services.alertmanager.loadbalancer.server.port=9093"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"
 
   grafana:
     image: grafana/grafana:latest
@@ -113,7 +113,7 @@ services:
         - "traefik.http.routers.grafana.entrypoints=websecure"
         - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
         - "traefik.http.services.grafana.loadbalancer.server.port=3000"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"
 
   loki:
     image: grafana/loki:latest
@@ -298,7 +298,7 @@ services:
         - "traefik.http.routers.influxdb.entrypoints=websecure"
         - "traefik.http.routers.influxdb.tls.certresolver=letsencrypt"
         - "traefik.http.services.influxdb.loadbalancer.server.port=8086"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"
       update_config:
         parallelism: 1
         delay: 10s

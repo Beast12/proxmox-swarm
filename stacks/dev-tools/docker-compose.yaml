@@ -51,7 +51,16 @@ services:
         - "traefik.http.routers.docker-registry.entrypoints=websecure"
         - "traefik.http.routers.docker-registry.tls.certresolver=letsencrypt"
         - "traefik.http.services.docker-registry.loadbalancer.server.port=5000"
-        - "traefik.docker.network=proxy"
+        # Timeout middleware for large uploads
+        - "traefik.http.middlewares.registry-timeout.buffering.maxRequestBodyBytes=2147483648"
+        - "traefik.http.middlewares.registry-timeout.buffering.memRequestBodyBytes=104857600"
+        - "traefik.http.routers.docker-registry.middlewares=registry-timeout"
+        # Use correct swarm label instead of docker label
+        - "traefik.swarm.network=proxy"
+    environment:
+      REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
     env_file:
       - /mnt/proxmox_swarm_data/env-files/dev-tools.env
     volumes:

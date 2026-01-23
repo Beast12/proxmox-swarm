@@ -1,0 +1,36 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Core"
+        - "homepage.name=Homepage"
+        - "homepage.icon=homepage"
+        - "homepage.href=https://homepage.tuxito.be"
+        - "homepage.description=Start page / dashboard"
+        - "traefik.enable=true"
+        - "traefik.http.routers.homepage.rule=Host(`homepage.tuxito.be`)"
+        - "traefik.http.routers.homepage.entrypoints=websecure"
+        - "traefik.http.routers.homepage.tls.certresolver=letsencrypt"
+        - "traefik.http.services.homepage.loadbalancer.server.port=3000"
+        - "traefik.docker.network=proxy"
+    volumes:
+      - /mnt/proxmox_swarm_data/homepage:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: homepage.tuxito.be
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

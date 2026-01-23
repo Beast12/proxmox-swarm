@@ -1,0 +1,27 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/jellyfin.env
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /mnt/proxmox_swarm_data/jellyfin/config:/config
+      - /mnt/proxmox_swarm_data/jellyfin/cache:/cache
+      - /mnt/nfs/media-nas/:/data
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=proxy"
+        - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.tuxito.be`)"
+        - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
+        - "homepage.group=Productivity Suite"
+        - "homepage.name=Jellyfin"
+        - "homepage.icon=jellyfin"
+        - "homepage.href=https://jellyfin.tuxito.be"
+        - "homepage.description=Jellyfin Media Server"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

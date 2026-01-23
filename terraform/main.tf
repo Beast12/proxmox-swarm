@@ -240,15 +240,15 @@ resource "null_resource" "plex_media_mounts" {
   }
 
   provisioner "remote-exec" {
-    inline = [
-      "sudo mkdir -p /mnt/nfs/media-nas",
-      %{ for mount in local.plex_media_mounts ~}
-      "sudo mkdir -p ${mount.dest}",
-      "grep -q '^${mount.src} ${mount.dest} nfs' /etc/fstab || echo '${mount.src} ${mount.dest} nfs defaults,nfsvers=3,rw,_netdev,nofail,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.device-timeout=30s 0 0' | sudo tee -a /etc/fstab > /dev/null",
-      %{ endfor ~}
-      "sudo systemctl daemon-reload",
-      "for mp in /mnt/nfs/media-nas/*; do mountpoint -q \"$mp\" || sudo mount \"$mp\" || true; done"
-    ]
+    inline = concat(
+      ["sudo mkdir -p /mnt/nfs/media-nas"],
+      [for mount in local.plex_media_mounts : "sudo mkdir -p ${mount.dest}"],
+      [for mount in local.plex_media_mounts : "grep -q '^${mount.src} ${mount.dest} nfs' /etc/fstab || echo '${mount.src} ${mount.dest} nfs defaults,nfsvers=3,rw,_netdev,nofail,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.device-timeout=30s 0 0' | sudo tee -a /etc/fstab > /dev/null"],
+      [
+        "sudo systemctl daemon-reload",
+        "for mp in /mnt/nfs/media-nas/*; do mountpoint -q \"$mp\" || sudo mount \"$mp\" || true; done"
+      ]
+    )
   }
 
   depends_on = [module.swarm_manager_vms, module.swarm_worker_vms]

@@ -1,5 +1,6 @@
 services:
   homepage:
+    # Example; https://pastebin.com/u/gladiator30/1/GnZWeXEy
     image: ghcr.io/gethomepage/homepage:latest
     deploy:
       mode: replicated

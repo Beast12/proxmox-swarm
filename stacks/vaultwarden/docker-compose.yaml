@@ -20,6 +20,11 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
+        - "homepage.group=Security"
+        - "homepage.name=Vaultwarden"
+        - "homepage.icon=vaultwarden.png"
+        - "homepage.href=https://vault.tuxito.be"
+        - "homepage.description=Password Manager"
         - "traefik.enable=true"
         # Main web UI
         - "traefik.http.routers.vaultwarden.rule=Host(`vault.tuxito.be`)"

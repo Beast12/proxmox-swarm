@@ -1,0 +1,19 @@
+- resources:
+    expanded: true
+    cpu: true
+    memory: true
+    disk: /mnt/proxmox_swarm_data/
+    diskUnits: bbytes
+
+- openmeteo:
+    latitude: 51.02744834156095
+    longitude: 4.294890527134032
+    timezone: Europe/Brussels
+    units: metric
+    cache: 5
+
+- datetime:
+    text_size: xl
+    format:
+      timeStyle: short
+      hourCycle: h23

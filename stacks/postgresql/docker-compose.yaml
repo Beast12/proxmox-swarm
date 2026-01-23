@@ -95,6 +95,11 @@ services:
       restart_policy:
         condition: on-failure
       labels:
+        - "homepage.group=Database"
+        - "homepage.name=pgAdmin"
+        - "homepage.icon=mdi-database"
+        - "homepage.href=https://pgadmin.tuxito.be"
+        - "homepage.description=PostgreSQL Admin UI"
         - "traefik.enable=true"
         - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.tuxito.be`)"
         - "traefik.http.routers.pgadmin.entrypoints=websecure"

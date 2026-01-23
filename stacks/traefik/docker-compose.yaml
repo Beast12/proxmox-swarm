@@ -90,6 +90,11 @@ services:
         max_attempts: 3
 
       labels:
+        - "homepage.group=Infrastructure"
+        - "homepage.name=Traefik"
+        - "homepage.icon=traefik.png"
+        - "homepage.href=https://traefik.tuxito.be"
+        - "homepage.description=Edge Router & Reverse Proxy"
         - "traefik.enable=true"
 
         # Dashboard Router

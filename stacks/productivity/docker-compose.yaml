@@ -190,8 +190,8 @@ services:
         - "traefik.swarm.network=proxy"
         - "homepage.group=Productivity Suite"
         - "homepage.name=Shiori"
-        - "homepage.icon=shiori.svg"
-        - "homepage.href=https://shiori.tuxito.be"
+        - "homepage.icon=shiori"
+        - "homepage.href=https://bookmarks.tuxito.be"
         - "homepage.description=Bookmark Manager"
   bitmappery:
     image: registry.tuxito.be/bitmappery:latest

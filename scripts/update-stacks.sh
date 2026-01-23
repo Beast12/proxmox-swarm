@@ -1,7 +1,12 @@
 #!/bin/bash
 
 STACKS_DIR=~/proxmox-swarm/stacks
-ACTIVE_STACKS=(authentik dev-tools monitoring postgresql services tools traefik)
+ACTIVE_STACKS=($(docker stack ls --format '{{.Name}}'))
+
+if [ ${#ACTIVE_STACKS[@]} -eq 0 ]; then
+    echo "No running stacks found."
+    exit 0
+fi
 
 cd $STACKS_DIR
 

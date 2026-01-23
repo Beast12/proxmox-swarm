@@ -4,7 +4,7 @@ networks:
 
 services:
   plex:
-    image: lscr.io/linuxserver/plex:latest
+    image: plexinc/pms-docker
     user: "0:0"
     ports:
       - 32400:32400/tcp

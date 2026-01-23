@@ -136,7 +136,7 @@ services:
       labels:
         - "homepage.group=Monitoring"
         - "homepage.name=Loki"
-        - "homepage.icon=grafana-loki.png"
+        - "homepage.icon=loki.svg"
         - "homepage.href=http://monitoring.lan:3100"
         - "homepage.description=Log Aggregation"
 

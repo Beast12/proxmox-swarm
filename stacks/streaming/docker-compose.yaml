@@ -1,30 +1,49 @@
-services:
-  jellyfin:
-    image: jellyfin/jellyfin
-    env_file:
-      - /mnt/proxmox_swarm_data/env-files/jellyfin.env
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /mnt/proxmox_swarm_data/jellyfin/config:/config
-      - /mnt/proxmox_swarm_data/jellyfin/cache:/cache
-      - /mnt/nfs/media-nas/:/data
-    deploy:
-      labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.tuxito.be`)"
-        - "traefik.http.routers.jellyfin.entrypoints=websecure"
-        - "traefik.http.routers.jellyfin.tls=true"
-        - "traefik.http.routers.jellyfin.tls.certresolver=letsencrypt"
-        - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
-        - "traefik.swarm.network=proxy"
-        - "homepage.group=Streaming"
-        - "homepage.name=Jellyfin"
-        - "homepage.icon=jellyfin"
-        - "homepage.href=https://jellyfin.tuxito.be"
-        - "homepage.description=Jellyfin Media Server"
-    networks:
-      - proxy
-
 networks:
   proxy:
     external: true
+
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    ports:
+      - 32400:32400/tcp
+      - 3005:3005/tcp
+      - 8324:8324/tcp
+      - 32469:32469/tcp
+      - 1900:1900/udp
+      - 32410:32410/udp
+      - 32412:32412/udp
+      - 32413:32413/udp
+      - 32414:32414/udp
+    networks:
+      - proxy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Brussels
+      - VERSION=docker
+      - PLEX_CLAIM=claim-xnRfAusMVxQRSzYzF25i
+    volumes:
+      - /mnt/proxmox_swarm_data/streaming/plex:/config
+      - /mnt/nfs/media-nas/tv:/tv
+      - /mnt/nfs/media-nas/movies:/movies
+      - /mnt/nfs/media-nas/music:/music
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Media"
+        - "homepage.name=Plex"
+        - "homepage.icon=plex.png"
+        - "homepage.href=https://plex.tuxito.be"
+        - "homepage.description=Media Server"
+        - "traefik.enable=true"
+        - "traefik.http.routers.plex.rule=Host(`plex.tuxito.be`)"
+        - "traefik.http.routers.plex.entrypoints=websecure"
+        - "traefik.http.routers.plex.tls.certresolver=letsencrypt"
+        - "traefik.http.services.plex.loadbalancer.server.port=32400"
+        - "traefik.swarm.network=proxy"

@@ -11,9 +11,9 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
-        - "homepage.group=Utility Tools"
+        - "homepage.group=Tools"
         - "homepage.name=ConvertX"
-        - "homepage.icon=mdi-file-swap"
+        - "homepage.icon=convertx.png"
         - "homepage.href=https://convert.tuxito.be"
         - "homepage.description=File Converter (1000+ formats)"
         - "traefik.enable=true"
@@ -40,9 +40,9 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
-        - "homepage.group=Utility Tools"
+        - "homepage.group=Tools"
         - "homepage.name=IT-Tools"
-        - "homepage.icon=mdi-tools"
+        - "homepage.icon=it-tools-light.svg"
         - "homepage.href=https://tools.tuxito.be"
         - "homepage.description=Developer Tools Collection"
         - "traefik.enable=true"
@@ -65,7 +65,7 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
-        - "homepage.group=Utility Tools"
+        - "homepage.group=Tools"
         - "homepage.name=QRding"
         - "homepage.icon=mdi-qrcode"
         - "homepage.href=https://qr.tuxito.be"
@@ -90,7 +90,7 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
-        - "homepage.group=Utility Tools"
+        - "homepage.group=Tools"
         - "homepage.name=FreshRSS"
         - "homepage.icon=freshrss"
         - "homepage.href=https://rss.tuxito.be"
@@ -123,9 +123,9 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
-        - "homepage.group=Utility Tools"
+        - "homepage.group=Tools"
         - "homepage.name=PairDrop"
-        - "homepage.icon=mdi-share-variant"
+        - "homepage.icon=pairdrop.png"
         - "homepage.href=https://pairdrop.tuxito.be"
         - "homepage.description=Cross-platform File Sharing"
         - "traefik.enable=true"
@@ -156,9 +156,9 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
-        - "homepage.group=Utility Tools"
+        - "homepage.group=Tools"
         - "homepage.name=Stirling PDF"
-        - "homepage.icon=mdi-file-pdf-box"
+        - "homepage.icon=stirling-pdf.svg"
         - "homepage.href=https://pdf.tuxito.be"
         - "homepage.description=PDF Manipulation Toolkit"
         - "traefik.enable=true"
@@ -199,9 +199,9 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
-        - "homepage.group=Utility Tools"
+        - "homepage.group=Tools"
         - "homepage.name=CronMaster"
-        - "homepage.icon=mdi-clock"
+        - "homepage.icon=cron-master.png"
         - "homepage.href=https://cron.tuxito.be"
         - "homepage.description=Cron Job Management"
         - "traefik.enable=true"

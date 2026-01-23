@@ -95,7 +95,7 @@ services:
       restart_policy:
         condition: on-failure
       labels:
-        - "homepage.group=Database"
+        - "homepage.group=Databases"
         - "homepage.name=pgAdmin"
         - "homepage.icon=mdi-database"
         - "homepage.href=https://pgadmin.tuxito.be"

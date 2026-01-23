@@ -12,11 +12,6 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
-        - "homepage.group=Core"
-        - "homepage.name=Homepage"
-        - "homepage.icon=homepage"
-        - "homepage.href=https://homepage.tuxito.be"
-        - "homepage.description=Start page / dashboard"
         - "traefik.enable=true"
         - "traefik.http.routers.homepage.rule=Host(`homepage.tuxito.be`)"
         - "traefik.http.routers.homepage.entrypoints=websecure"

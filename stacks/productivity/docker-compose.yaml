@@ -38,6 +38,11 @@ services:
         - "traefik.http.routers.fossflow.tls.certresolver=letsencrypt"
         - "traefik.http.services.fossflow.loadbalancer.server.port=80"
         - "traefik.swarm.network=proxy"
+        - "homepage.group=Productivity Suite"
+        - "homepage.name=FossFlow"
+        - "homepage.icon=diagrams-net.svg"
+        - "homepage.href=https://fossflow.tuxito.be"
+        - "homepage.description=3D Diagrams"
 
   # Docmost - Document collaboration platform
   docmost:
@@ -65,7 +70,7 @@ services:
         - "traefik.swarm.network=proxy"
         - "homepage.group=Productivity Suite"
         - "homepage.name=Docmost"
-        - "homepage.icon=mdi-file-document-multiple"
+        - "homepage.icon=docmost.png"
         - "homepage.href=https://docmost.tuxito.be"
         - "homepage.description=Document Collaboration"
 
@@ -98,7 +103,7 @@ services:
         - "traefik.swarm.network=proxy"
         - "homepage.group=Productivity Suite"
         - "homepage.name=Paperless-ngx"
-        - "homepage.icon=mdi-file-pdf-box"
+        - "homepage.icon=paperless.svg"
         - "homepage.href=https://paperless.tuxito.be"
         - "homepage.description=Document Management"
 
@@ -128,7 +133,7 @@ services:
         - "traefik.swarm.network=proxy"
         - "homepage.group=Productivity Suite"
         - "homepage.name=Penpot"
-        - "homepage.icon=mdi-palette"
+        - "homepage.icon=penpot-light.svg"
         - "homepage.href=https://penpot.tuxito.be"
         - "homepage.description=Design & Prototyping"
 
@@ -185,7 +190,7 @@ services:
         - "traefik.swarm.network=proxy"
         - "homepage.group=Productivity Suite"
         - "homepage.name=Shiori"
-        - "homepage.icon=mdi-bookmark"
+        - "homepage.icon=shiori.svg"
         - "homepage.href=https://shiori.tuxito.be"
         - "homepage.description=Bookmark Manager"
   bitmappery:
@@ -205,8 +210,12 @@ services:
         - "traefik.http.routers.bitmappery.tls=true"
         - "traefik.http.routers.bitmappery.tls.certresolver=letsencrypt"
         - "traefik.http.services.bitmappery.loadbalancer.server.port=5173"
-        # Optional: Add middleware for security headers
-        # - "traefik.http.routers.bitmappery.middlewares=secure-headers@file"
+        - "homepage.group=Productivity Suite"
+        - "homepage.name=Bitmappery"
+        - "homepage.icon=synology-photo-station.png"
+        - "homepage.href=https://bitmappery.tuxito.be"
+        - "homepage.description=Image Editor"
+
       placement:
         constraints:
           - node.role == worker # Adjust based on your cluster setup

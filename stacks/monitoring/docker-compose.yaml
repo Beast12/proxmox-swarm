@@ -161,12 +161,6 @@ services:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-      labels:
-        - "homepage.group=Monitoring"
-        - "homepage.name=Promtail"
-        - "homepage.icon=grafana-loki.png"
-        - "homepage.href=http://monitoring.lan:9080"
-        - "homepage.description=Log Collection Agent"
 
   pve-exporter:
     image: prompve/prometheus-pve-exporter:latest
@@ -185,12 +179,6 @@ services:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-      labels:
-        - "homepage.group=Monitoring"
-        - "homepage.name=PVE Exporter"
-        - "homepage.icon=proxmox.png"
-        - "homepage.href=http://monitoring.lan:9221"
-        - "homepage.description=Proxmox Metrics Exporter"
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -213,12 +201,6 @@ services:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-      labels:
-        - "homepage.group=Monitoring"
-        - "homepage.name=cAdvisor"
-        - "homepage.icon=cadvisor.png"
-        - "homepage.href=http://monitoring.lan:8080"
-        - "homepage.description=Container Resource Monitoring"
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -244,12 +226,6 @@ services:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-      labels:
-        - "homepage.group=Monitoring"
-        - "homepage.name=Node Exporter"
-        - "homepage.icon=prometheus.png"
-        - "homepage.href=http://monitoring.lan:9100"
-        - "homepage.description=Node Exporter"
 
   snmp-exporter:
     image: prom/snmp-exporter:v0.29.0
@@ -268,12 +244,6 @@ services:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-      labels:
-        - "homepage.group=Monitoring"
-        - "homepage.name=SNMP Exporter"
-        - "homepage.icon=prometheus.png"
-        - "homepage.href=http://monitoring.lan:9116"
-        - "homepage.description=SNMP to Prometheus"
   influxdb:
     image: influxdb:latest
     deploy:
@@ -288,7 +258,7 @@ services:
         max_attempts: 3
         window: 120s
       labels:
-        - "homepage.group=Database"
+        - "homepage.group=Databases"
         - "homepage.name=InfluxDB"
         - "homepage.icon=influxdb.png"
         - "homepage.href=https://influxdb.tuxito.be"

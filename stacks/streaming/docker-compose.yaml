@@ -23,13 +23,16 @@ services:
       - VERSION=docker
       - PLEX_CLAIM=claim-xnRfAusMVxQRSzYzF25i
     volumes:
-      - /mnt/proxmox_swarm_data/streaming/plex:/config
+      - plex_config:/config
       - /mnt/nfs/media-nas/tv:/tv
       - /mnt/nfs/media-nas/movies:/movies
       - /mnt/nfs/media-nas/music:/music
     deploy:
       mode: replicated
       replicas: 1
+      placement:
+        constraints:
+          - node.hostname == swarm-worker-w1
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -46,3 +49,7 @@ services:
         - "traefik.http.routers.plex.tls.certresolver=letsencrypt"
         - "traefik.http.services.plex.loadbalancer.server.port=32400"
         - "traefik.swarm.network=proxy"
+
+volumes:
+  plex_config:
+    driver: local

@@ -20,7 +20,7 @@ services:
     environment:
       - TZ=Europe/Brussels
       - VERSION=docker
-      - PLEX_CLAIM=claim-xnRfAusMVxQRSzYzF25i
+      - PLEX_CLAIM=claim-Krxwiv427B-Y6hsdFQDd
     volumes:
       - plex_config:/config
       - /mnt/nfs/media-nas/tv:/tv

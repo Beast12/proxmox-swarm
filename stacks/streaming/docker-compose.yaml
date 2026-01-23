@@ -14,7 +14,7 @@ services:
         - "traefik.docker.network=proxy"
         - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.tuxito.be`)"
         - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
-        - "homepage.group=Productivity Suite"
+        - "homepage.group=Streaming"
         - "homepage.name=Jellyfin"
         - "homepage.icon=jellyfin"
         - "homepage.href=https://jellyfin.tuxito.be"

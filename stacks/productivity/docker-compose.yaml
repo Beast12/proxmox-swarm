@@ -32,7 +32,7 @@ services:
         max_attempts: 5
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.fossflow.rule=Host(`diagrams.tuxito.be`)"
+        - "traefik.http.routers.fossflow.rule=Host(`fossflow.tuxito.be`)"
         - "traefik.http.routers.fossflow.entrypoints=websecure"
         - "traefik.http.routers.fossflow.tls=true"
         - "traefik.http.routers.fossflow.tls.certresolver=letsencrypt"

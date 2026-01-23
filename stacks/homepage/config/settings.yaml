@@ -1,0 +1,16 @@
+title: Tuxito Server
+
+cardBlur: md # or sm, lg
+headerStyle: clean #underlined # or boxed, boxedWidgets, clean
+
+background:
+  image: /images/background.png
+  opacity: 70
+quicklaunch:
+  searchDescriptions: true
+  hideInternetSearch: true
+  showSearchSuggestions: true
+  hideVisitURL: true
+  provider: google # google, duckduckgo, bing, baidu, brave or custom
+theme: dark
+color: slate

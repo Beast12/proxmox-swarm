@@ -25,6 +25,7 @@ services:
         - "traefik.docker.network=proxy"
     volumes:
       - /mnt/proxmox_swarm_data/homepage:/app/config
+      - /mnt/proxmox_swarm_data/homepage/images:/app/public/images:ro
       - /mnt/proxmox_swarm_data:/mnt/proxmox_swarm_data:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:

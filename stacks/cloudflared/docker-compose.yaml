@@ -4,7 +4,7 @@ services:
     image: cloudflare/cloudflared:latest
     command: tunnel --no-autoupdate run
     networks:
-      - proxy
+      - cloudflared
     env_file:
       - /mnt/proxmox_swarm_data/env-files/cloudflared.env
     deploy:
@@ -19,5 +19,5 @@ services:
         delay: 10s
 
 networks:
-  proxy:
+  cloudflared:
     external: true

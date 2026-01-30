@@ -7,6 +7,8 @@ networks:
     driver: overlay
   services:
     external: true
+  cloudflared:
+    external: true
 
 services:
   # FossFLOW - 3D diagrams
@@ -170,6 +172,7 @@ services:
     image: ghcr.io/go-shiori/shiori:latest
     networks:
       - proxy
+      - cloudflared
     env_file:
       - /mnt/proxmox_swarm_data/env-files/shiori.env
     volumes:

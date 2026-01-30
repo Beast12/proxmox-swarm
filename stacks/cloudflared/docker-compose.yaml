@@ -17,8 +17,6 @@ services:
       update_config:
         parallelism: 1
         delay: 10s
-    environment:
-      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
 
 networks:
   proxy:

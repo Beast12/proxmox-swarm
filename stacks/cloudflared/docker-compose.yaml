@@ -1,0 +1,25 @@
+# cloudflared-stack.yml
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
+    networks:
+      - proxy
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/cloudflared.env
+    deploy:
+      mode: replicated
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+
+networks:
+  proxy:
+    external: true

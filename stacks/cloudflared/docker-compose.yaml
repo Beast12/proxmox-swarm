@@ -17,7 +17,8 @@ services:
       update_config:
         parallelism: 1
         delay: 10s
-
+      labels:
+        - "shepherd.enable=true"
 networks:
   cloudflared:
     external: true

@@ -56,6 +56,7 @@ services:
         - "traefik.http.routers.plex.tls.certresolver=letsencrypt"
         - "traefik.http.services.plex.loadbalancer.server.port=32400"
         - "traefik.swarm.network=traefik_public"
+        - "shepherd.enable=true"
 
 volumes:
   plex_config:

@@ -297,20 +297,29 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       TZ: Europe/Brussels
-      SLEEP_TIME: "5m"
       FILTER_SERVICES: "label=shepherd.enable=true"
       BLACKLIST_SERVICES: "shepherd monitoring_prometheus monitoring_grafana"
-      WITH_REGISTRY_AUTH: "true"
-      WITH_NO_RESOLVE_IMAGE: "true"
+      APPRISE_SIDECAR_URL: "services_apprise:5000" # Use service name
+      RUN_ONCE_AND_EXIT: "true"
+      ROLLBACK_ON_FAILURE: "true"
+      VERBOSE: "true"
     deploy:
+      mode: replicated
+      replicas: 0
       placement:
         constraints:
           - node.role == manager
-      restart_policy:
-        condition: any
-        delay: 5s
       labels:
-        - shepherd.enable=false # Don't update itself
+        - shepherd.enable=false
+        - swarm.cronjob.enable=true
+        - swarm.cronjob.schedule=0 4 * * *
+        - swarm.cronjob.skip-running=true
+      restart_policy:
+        condition: none
+    networks:
+      - monitoring
+      - services
+      - cronjob_net
 
 networks:
   monitoring:

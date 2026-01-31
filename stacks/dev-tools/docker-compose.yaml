@@ -20,6 +20,7 @@ services:
         - "traefik.http.routers.code-server.tls.certresolver=letsencrypt"
         - "traefik.http.services.code-server.loadbalancer.server.port=8443"
         - "traefik.swarm.network=proxy"
+        - "shepherd.enable=true"
     env_file:
       - /mnt/proxmox_swarm_data/env-files/dev-tools.env
     volumes:

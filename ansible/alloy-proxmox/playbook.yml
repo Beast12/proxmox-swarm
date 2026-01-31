@@ -1,0 +1,150 @@
+---
+- name: Deploy Promtail to Proxmox Hosts
+  hosts: proxmox
+  become: true
+  vars_files:
+    - vars/main.yml
+
+  tasks:
+    - name: Install required packages
+      apt:
+        name:
+          - unzip
+          - curl
+          - ca-certificates
+        state: present
+        update_cache: yes
+
+    - name: Create Promtail directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ promtail_config_dir }}"
+        - "{{ promtail_data_dir }}"
+
+    - name: Check if Promtail binary exists
+      stat:
+        path: "{{ promtail_binary_path }}"
+      register: promtail_binary
+
+    - name: Get installed Promtail version
+      command: "{{ promtail_binary_path }} --version"
+      register: promtail_current_version
+      failed_when: false
+      changed_when: false
+      when: promtail_binary.stat.exists
+
+    - name: Download and install Promtail
+      block:
+        - name: Download Promtail
+          get_url:
+            url: "{{ promtail_download_url }}"
+            dest: /tmp/promtail.zip
+            mode: "0644"
+          register: download_result
+
+        - name: Unzip Promtail
+          unarchive:
+            src: /tmp/promtail.zip
+            dest: /tmp/
+            remote_src: yes
+
+        - name: Install Promtail binary
+          copy:
+            src: /tmp/promtail-linux-amd64
+            dest: "{{ promtail_binary_path }}"
+            mode: "0755"
+            remote_src: yes
+
+        - name: Clean up downloaded files
+          file:
+            path: "{{ item }}"
+            state: absent
+          loop:
+            - /tmp/promtail.zip
+            - /tmp/promtail-linux-amd64
+      when: >
+        not promtail_binary.stat.exists or
+        (promtail_current_version.stdout is defined and 
+         promtail_version not in promtail_current_version.stdout)
+
+    - name: Deploy Promtail configuration
+      template:
+        src: templates/promtail-config.yml.j2
+        dest: "{{ promtail_config_dir }}/config.yml"
+        mode: "0644"
+      notify: restart promtail
+
+    - name: Deploy Promtail systemd service
+      template:
+        src: templates/promtail.service.j2
+        dest: /etc/systemd/system/promtail.service
+        mode: "0644"
+      notify:
+        - reload systemd
+        - restart promtail
+
+    - name: Enable and start Promtail service
+      systemd:
+        name: promtail
+        enabled: yes
+        state: started
+
+    - name: Wait for Promtail to be ready
+      wait_for:
+        port: "{{ promtail_http_listen_port }}"
+        delay: 2
+        timeout: 30
+
+    - name: Check Promtail status
+      systemd:
+        name: promtail
+        state: started
+      register: promtail_status
+
+    - name: Verify Promtail is running
+      uri:
+        url: "http://localhost:{{ promtail_http_listen_port }}/ready"
+        method: GET
+        status_code: 200
+      register: promtail_health
+      retries: 3
+      delay: 5
+      until: promtail_health.status == 200
+
+  handlers:
+    - name: reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: restart promtail
+      systemd:
+        name: promtail
+        state: restarted
+
+- name: Verify deployment
+  hosts: proxmox
+  become: true
+  vars_files:
+    - vars/main.yml
+
+  tasks:
+    - name: Display Promtail service status
+      command: systemctl status promtail --no-pager
+      register: service_status
+      changed_when: false
+
+    - name: Show service status
+      debug:
+        msg: "{{ service_status.stdout_lines }}"
+
+    - name: Get recent Promtail logs
+      command: journalctl -u promtail -n 20 --no-pager
+      register: promtail_logs
+      changed_when: false
+
+    - name: Display recent logs
+      debug:
+        msg: "{{ promtail_logs.stdout_lines }}"

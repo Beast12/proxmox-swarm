@@ -118,10 +118,9 @@ services:
   loki:
     image: grafana/loki:latest
     restart: unless-stopped
-    security_opt:
-      - apparmor:unconfined
     networks:
       - monitoring
+      - proxy
     volumes:
       - /mnt/proxmox_swarm_data/monitoring/config/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
       - /mnt/proxmox_swarm_data/monitoring/data/loki:/loki:rw
@@ -137,8 +136,14 @@ services:
         - "homepage.group=Monitoring"
         - "homepage.name=Loki"
         - "homepage.icon=loki.svg"
-        - "homepage.href=http://monitoring.lan:3100"
+        - "homepage.href=https://loki.tuxito.be"
         - "homepage.description=Log Aggregation"
+        - "traefik.enable=true"
+        - "traefik.http.routers.loki.rule=Host(`loki.tuxito.be`)"
+        - "traefik.http.routers.loki.entrypoints=websecure"
+        - "traefik.http.routers.loki.tls.certresolver=letsencrypt"
+        - "traefik.http.services.loki.loadbalancer.server.port=3100"
+        - "traefik.swarm.network=proxy"
 
   promtail:
     image: grafana/promtail:latest

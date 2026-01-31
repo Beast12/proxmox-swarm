@@ -1,0 +1,44 @@
+---
+# Alloy version - LATEST as of January 31, 2026
+alloy_version: "1.12.0"
+
+# Repository configuration
+alloy_apt_key_url: "https://apt.grafana.com/gpg-full.key"
+alloy_apt_repo: "deb [signed-by=/etc/apt/keyrings/grafana.asc] https://apt.grafana.com stable main"
+
+# Your Loki and Prometheus endpoints
+loki_url: "http://192.168.10.100:3100/loki/api/v1/push"
+prometheus_url: "http://prometheus.tuxito.be/api/v1/write"
+
+# Optional: Basic auth
+# loki_username: "admin"
+# loki_password: "your_password"
+# prometheus_username: "admin"
+# prometheus_password: "your_password"
+
+# Alloy configuration
+alloy_config_dir: /etc/alloy
+alloy_data_dir: /var/lib/alloy
+alloy_http_listen_port: 12345
+
+# Metrics scrape interval
+metrics_scrape_interval: "60s"
+
+# Log paths to collect
+log_paths:
+  system:
+    - /var/log/syslog
+    - /var/log/messages
+  daemon:
+    - /var/log/daemon.log
+  proxmox:
+    - /var/log/pve*.log
+    - /var/log/pve-firewall.log
+  containers:
+    - /var/log/lxc/*.log
+  vms:
+    - /var/log/qemu-server/*.log
+  auth:
+    - /var/log/auth.log
+  ceph:
+    - /var/log/ceph/*.log

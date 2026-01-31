@@ -1,0 +1,46 @@
+server:
+  http_listen_port: {{ promtail_http_listen_port }}
+  grpc_listen_port: 0
+
+positions:
+  filename: {{ promtail_data_dir }}/positions.yaml
+
+clients:
+  - url: {{ loki_url }}
+{% if loki_username is defined and loki_password is defined %}
+    basic_auth:
+      username: {{ loki_username }}
+      password: {{ loki_password }}
+{% endif %}
+
+scrape_configs:
+{% for config in promtail_scrape_configs %}
+  - job_name: {{ config.job_name }}
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: {{ config.labels.job }}
+          host: {{ ansible_hostname }}
+          instance: {{ ansible_fqdn }}
+{% if promtail_labels is defined %}
+{% for key, value in promtail_labels.items() %}
+          {{ key }}: {{ value }}
+{% endfor %}
+{% endif %}
+        __path__: {{ config.paths | join(',') }}
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>\w+\s+\d+\s+\d+:\d+:\d+)\s+(?P<hostname>\S+)\s+(?P<process>\S+?)(\[(?P<pid>\d+)\])?:\s+(?P<message>.*)$'
+      - labels:
+          process:
+          pid:
+      - timestamp:
+          source: timestamp
+          format: Jan 2 15:04:05
+          fallback_formats:
+            - "2006-01-02T15:04:05.999999999Z07:00"
+            - "2006-01-02T15:04:05Z07:00"
+      - output:
+          source: message
+{% endfor %}

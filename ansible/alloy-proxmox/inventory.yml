@@ -1,0 +1,32 @@
+all:
+  children:
+    proxmox:
+      hosts:
+        proxmox-1:
+          ansible_host: 192.168.10.11
+          promtail_labels:
+            datacenter: homelab
+            cluster: main
+        proxmox-2:
+          ansible_host: 192.168.10.12
+          promtail_labels:
+            datacenter: homelab
+            cluster: main
+        proxmox-3:
+          ansible_host: 192.168.10.13
+          promtail_labels:
+            datacenter: homelab
+            cluster: main
+        proxmox-4:
+          ansible_host: 192.168.10.14
+          promtail_labels:
+            datacenter: homelab
+            cluster: main
+        proxmox-5:
+          ansible_host: 192.168.10.15
+          promtail_labels:
+            datacenter: homelab
+            cluster: main
+      vars:
+        ansible_user: root
+        ansible_python_interpreter: /usr/bin/python3

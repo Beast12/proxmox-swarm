@@ -141,3 +141,5 @@ networks:
     external: true
   proxy:
     external: true
+  cronjob_net:
+    external: true

@@ -91,6 +91,7 @@ services:
   apprise:
     image: caronc/apprise:latest
     restart: unless-stopped
+    user: "0:0"
     env_file:
       - /mnt/proxmox_swarm_data/env-files/services.env
     environment:

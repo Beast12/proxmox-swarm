@@ -328,6 +328,8 @@ networks:
     external: true
   services:
     external: true
+  cronjob_net:
+    external: true
 
 volumes:
   influxdb-data:

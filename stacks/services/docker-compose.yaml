@@ -42,12 +42,17 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
+        - "homepage.group=Infrastructure"
+        - "homepage.name=Gotify"
+        - "homepage.icon=gotify.png"
+        - "homepage.href=https://gotify.tuxito.be"
+        - "homepage.description=Gotify Notification Service"
         - "traefik.enable=true"
         - "traefik.http.routers.gotify.rule=Host(`gotify.tuxito.be`)"
         - "traefik.http.routers.gotify.entrypoints=websecure"
         - "traefik.http.routers.gotify.tls.certresolver=letsencrypt"
         - "traefik.http.services.gotify.loadbalancer.server.port=80"
-
+        - "traefik.swarm.network=proxy"
   ntfy:
     image: binwiederhier/ntfy:latest
     restart: unless-stopped
@@ -69,11 +74,17 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
+        - "homepage.group=Infrastructure"
+        - "homepage.name=Ntfy"
+        - "homepage.icon=ntfy.png"
+        - "homepage.href=https://ntfy.tuxito.be"
+        - "homepage.description=Ntfy Notification Service"
         - "traefik.enable=true"
         - "traefik.http.routers.ntfy.rule=Host(`ntfy.tuxito.be`)"
         - "traefik.http.routers.ntfy.entrypoints=websecure"
         - "traefik.http.routers.ntfy.tls.certresolver=letsencrypt"
         - "traefik.http.services.ntfy.loadbalancer.server.port=80"
+        - "traefik.swarm.network=proxy"
 
   apprise:
     image: caronc/apprise:latest
@@ -96,11 +107,17 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
+        - "homepage.group=Infrastructure"
+        - "homepage.name=Apprise"
+        - "homepage.icon=apprise.png"
+        - "homepage.href=https://apprise.tuxito.be"
+        - "homepage.description=Apprise Notification Service"
         - "traefik.enable=true"
         - "traefik.http.routers.apprise.rule=Host(`apprise.tuxito.be`)"
         - "traefik.http.routers.apprise.entrypoints=websecure"
         - "traefik.http.routers.apprise.tls.certresolver=letsencrypt"
         - "traefik.http.services.apprise.loadbalancer.server.port=8000"
+        - "traefik.swarm.network=proxy"
 
 networks:
   services:

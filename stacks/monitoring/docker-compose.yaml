@@ -326,6 +326,8 @@ networks:
     external: true
   proxy:
     external: true
+  services:
+    external: true
 
 volumes:
   influxdb-data:

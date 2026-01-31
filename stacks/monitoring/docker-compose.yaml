@@ -291,6 +291,26 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+  shepherd:
+    image: containrrr/shepherd
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      TZ: Europe/Brussels
+      SLEEP_TIME: "5m"
+      FILTER_SERVICES: "label=shepherd.enable=true"
+      BLACKLIST_SERVICES: "shepherd monitoring_prometheus monitoring_grafana"
+      WITH_REGISTRY_AUTH: "true"
+      WITH_NO_RESOLVE_IMAGE: "true"
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+      labels:
+        - shepherd.enable=false # Don't update itself
 
 networks:
   monitoring:

@@ -128,7 +128,7 @@ services:
     environment:
       TZ: Europe/Brussels
       LOG_LEVEL: info
-      LOG_JSON: false
+      LOG_JSON: "false"
     deploy:
       placement:
         constraints:

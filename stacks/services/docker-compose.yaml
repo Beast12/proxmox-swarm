@@ -52,7 +52,6 @@ services:
     image: binwiederhier/ntfy:latest
     restart: unless-stopped
     command: serve
-    user: "1000:1000"
     env_file:
       - /mnt/proxmox_swarm_data/env-files/services.env
     environment:

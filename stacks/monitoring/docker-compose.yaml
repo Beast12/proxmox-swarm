@@ -1,10 +1,6 @@
 services:
   prometheus:
     image: prom/prometheus:latest
-    restart: unless-stopped
-    user: "65534"
-    security_opt:
-      - apparmor:unconfined
     networks:
       - monitoring
       - proxy
@@ -13,14 +9,14 @@ services:
       - /mnt/proxmox_swarm_data/monitoring/config/prometheus/rules:/etc/prometheus/rules:ro
       - /mnt/proxmox_swarm_data/monitoring/data/prometheus:/prometheus:rw
     command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-      - "--storage.tsdb.retention.time=30d"
-      - "--storage.tsdb.retention.size=50GB"
-      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
-      - "--web.console.templates=/usr/share/prometheus/consoles"
-      - "--web.enable-lifecycle"
-      - "--web.enable-admin-api"
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --storage.tsdb.retention.size=50GB
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
+      - --web.enable-lifecycle
+      - --web.enable-admin-api
     deploy:
       mode: replicated
       replicas: 1
@@ -29,27 +25,23 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
-        - "homepage.group=Monitoring"
-        - "homepage.name=Prometheus"
-        - "homepage.icon=prometheus.png"
-        - "homepage.href=https://prometheus.tuxito.be"
-        - "homepage.description=Metrics Collection & Storage"
-        - "traefik.enable=true"
-        - "traefik.http.routers.prometheus.rule=Host(`prometheus.tuxito.be`)"
-        - "traefik.http.routers.prometheus.entrypoints=websecure"
-        - "traefik.http.routers.prometheus.tls.certresolver=letsencrypt"
-        - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
-        - "traefik.swarm.network=proxy"
+        - homepage.group=Monitoring
+        - homepage.name=Prometheus
+        - homepage.icon=prometheus.png
+        - homepage.href=https://prometheus.tuxito.be
+        - homepage.description=Metrics Collection & Storage
+        - traefik.enable=true
+        - traefik.http.routers.prometheus.rule=Host(`prometheus.tuxito.be`)
+        - traefik.http.routers.prometheus.entrypoints=websecure
+        - traefik.http.routers.prometheus.tls.certresolver=letsencrypt
+        - traefik.http.services.prometheus.loadbalancer.server.port=9090
+        - traefik.swarm.network=proxy
     depends_on:
       - pve-exporter
       - cadvisor
       - alertmanager
-
   alertmanager:
     image: prom/alertmanager:latest
-    restart: unless-stopped
-    security_opt:
-      - apparmor:unconfined
     networks:
       - monitoring
       - proxy
@@ -57,10 +49,10 @@ services:
       - /mnt/proxmox_swarm_data/monitoring/config/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - /mnt/proxmox_swarm_data/monitoring/data/alertmanager:/alertmanager:rw
     command:
-      - "--config.file=/etc/alertmanager/alertmanager.yml"
-      - "--storage.path=/alertmanager"
-      - "--web.external-url=https://alertmanager.tuxito.be"
-      - "--cluster.listen-address="
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --web.external-url=https://alertmanager.tuxito.be
+      - --cluster.listen-address=
     deploy:
       mode: replicated
       replicas: 1
@@ -69,23 +61,19 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
-        - "homepage.group=Monitoring"
-        - "homepage.name=Alertmanager"
-        - "homepage.icon=prometheus.png"
-        - "homepage.href=https://alertmanager.tuxito.be"
-        - "homepage.description=Alert Management & Routing"
-        - "traefik.enable=true"
-        - "traefik.http.routers.alertmanager.rule=Host(`alertmanager.tuxito.be`)"
-        - "traefik.http.routers.alertmanager.entrypoints=websecure"
-        - "traefik.http.routers.alertmanager.tls.certresolver=letsencrypt"
-        - "traefik.http.services.alertmanager.loadbalancer.server.port=9093"
-        - "traefik.swarm.network=proxy"
-
+        - homepage.group=Monitoring
+        - homepage.name=Alertmanager
+        - homepage.icon=prometheus.png
+        - homepage.href=https://alertmanager.tuxito.be
+        - homepage.description=Alert Management & Routing
+        - traefik.enable=true
+        - traefik.http.routers.alertmanager.rule=Host(`alertmanager.tuxito.be`)
+        - traefik.http.routers.alertmanager.entrypoints=websecure
+        - traefik.http.routers.alertmanager.tls.certresolver=letsencrypt
+        - traefik.http.services.alertmanager.loadbalancer.server.port=9093
+        - traefik.swarm.network=proxy
   grafana:
     image: grafana/grafana:latest
-    restart: unless-stopped
-    security_opt:
-      - apparmor:unconfined
     networks:
       - monitoring
       - proxy
@@ -103,21 +91,19 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
-        - "homepage.group=Monitoring"
-        - "homepage.name=Grafana"
-        - "homepage.icon=grafana.png"
-        - "homepage.href=https://grafana.tuxito.be"
-        - "homepage.description=Monitoring Dashboards"
-        - "traefik.enable=true"
-        - "traefik.http.routers.grafana.rule=Host(`grafana.tuxito.be`)"
-        - "traefik.http.routers.grafana.entrypoints=websecure"
-        - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
-        - "traefik.http.services.grafana.loadbalancer.server.port=3000"
-        - "traefik.swarm.network=proxy"
-
+        - homepage.group=Monitoring
+        - homepage.name=Grafana
+        - homepage.icon=grafana.png
+        - homepage.href=https://grafana.tuxito.be
+        - homepage.description=Monitoring Dashboards
+        - traefik.enable=true
+        - traefik.http.routers.grafana.rule=Host(`grafana.tuxito.be`)
+        - traefik.http.routers.grafana.entrypoints=websecure
+        - traefik.http.routers.grafana.tls.certresolver=letsencrypt
+        - traefik.http.services.grafana.loadbalancer.server.port=3000
+        - traefik.swarm.network=proxy
   loki:
     image: grafana/loki:latest
-    restart: unless-stopped
     networks:
       - monitoring
       - proxy
@@ -133,25 +119,21 @@ services:
         delay: 5s
         max_attempts: 3
       labels:
-        - "homepage.group=Monitoring"
-        - "homepage.name=Loki"
-        - "homepage.icon=loki.svg"
-        - "homepage.href=https://loki.tuxito.be"
-        - "homepage.description=Log Aggregation"
-        - "traefik.enable=true"
-        - "traefik.http.routers.loki.rule=Host(`loki.tuxito.be`)"
-        - "traefik.http.routers.loki.entrypoints=websecure"
-        - "traefik.http.routers.loki.tls.certresolver=letsencrypt"
-        - "traefik.http.services.loki.loadbalancer.server.port=3100"
-        - "traefik.swarm.network=proxy"
-
+        - homepage.group=Monitoring
+        - homepage.name=Loki
+        - homepage.icon=loki.svg
+        - homepage.href=https://loki.tuxito.be
+        - homepage.description=Log Aggregation
+        - traefik.enable=true
+        - traefik.http.routers.loki.rule=Host(`loki.tuxito.be`)
+        - traefik.http.routers.loki.entrypoints=websecure
+        - traefik.http.routers.loki.tls.certresolver=letsencrypt
+        - traefik.http.services.loki.loadbalancer.server.port=3100
+        - traefik.swarm.network=proxy
   promtail:
     image: grafana/promtail:latest
-    restart: unless-stopped
-    security_opt:
-      - apparmor:unconfined
     ports:
-      - "514:1514/udp"
+      - 514:1514/udp
     networks:
       - monitoring
     volumes:
@@ -166,17 +148,14 @@ services:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-
   pve-exporter:
     image: prompve/prometheus-pve-exporter:latest
-    restart: unless-stopped
-    security_opt:
-      - apparmor:unconfined
     networks:
       - monitoring
     volumes:
       - /mnt/proxmox_swarm_data/monitoring/config/pve-exporter/pve.yml:/etc/pve.yml:ro
-    command: --config.file=/etc/pve.yml --collector.status --collector.version --web.listen-address=:9221
+    command: --config.file=/etc/pve.yml --collector.status --collector.version
+      --web.listen-address=:9221
     deploy:
       mode: replicated
       replicas: 1
@@ -184,16 +163,12 @@ services:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
-    restart: unless-stopped
-    security_opt:
-      - apparmor:unconfined
     networks:
       - monitoring
     ports:
-      - "8080:8080"
+      - 8080:8080
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -206,42 +181,34 @@ services:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-
   node-exporter:
     image: prom/node-exporter:latest
-    restart: unless-stopped
-    security_opt:
-      - apparmor:unconfined
     networks:
       - monitoring
     ports:
-      - "9100:9100"
+      - 9100:9100
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
-      - "--path.procfs=/host/proc"
-      - "--path.sysfs=/host/sys"
-      - "--path.rootfs=/rootfs"
-      - "--collector.filesystem.mount-points-exclude=^/(proc|sys|dev|run|var/lib/docker/.+)($$|/)"
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --path.rootfs=/rootfs
+      - --collector.filesystem.mount-points-exclude=^/(proc|sys|dev|run|var/lib/docker/.+)($$|/)
     deploy:
       mode: global
       restart_policy:
         condition: on-failure
         delay: 5s
         max_attempts: 3
-
   snmp-exporter:
     image: prom/snmp-exporter:v0.29.0
-    restart: unless-stopped
-    security_opt:
-      - apparmor:unconfined
     networks:
       - monitoring
     volumes:
       - /mnt/proxmox_swarm_data/monitoring/config/snmp/snmp.yml:/etc/snmp_exporter/snmp.yml:ro
-    command: "--config.file=/etc/snmp_exporter/snmp.yml"
+    command: --config.file=/etc/snmp_exporter/snmp.yml
     deploy:
       mode: replicated
       replicas: 1
@@ -263,17 +230,17 @@ services:
         max_attempts: 3
         window: 120s
       labels:
-        - "homepage.group=Databases"
-        - "homepage.name=InfluxDB"
-        - "homepage.icon=influxdb.png"
-        - "homepage.href=https://influxdb.tuxito.be"
-        - "homepage.description=Time Series Database"
-        - "traefik.enable=true"
-        - "traefik.http.routers.influxdb.rule=Host(`influxdb.tuxito.be`)"
-        - "traefik.http.routers.influxdb.entrypoints=websecure"
-        - "traefik.http.routers.influxdb.tls.certresolver=letsencrypt"
-        - "traefik.http.services.influxdb.loadbalancer.server.port=8086"
-        - "traefik.swarm.network=proxy"
+        - homepage.group=Databases
+        - homepage.name=InfluxDB
+        - homepage.icon=influxdb.png
+        - homepage.href=https://influxdb.tuxito.be
+        - homepage.description=Time Series Database
+        - traefik.enable=true
+        - traefik.http.routers.influxdb.rule=Host(`influxdb.tuxito.be`)
+        - traefik.http.routers.influxdb.entrypoints=websecure
+        - traefik.http.routers.influxdb.tls.certresolver=letsencrypt
+        - traefik.http.services.influxdb.loadbalancer.server.port=8086
+        - traefik.swarm.network=proxy
       update_config:
         parallelism: 1
         delay: 10s
@@ -291,7 +258,9 @@ services:
       - monitoring
       - proxy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8086/health || exit 1"]
+      test:
+        - CMD-SHELL
+        - curl -f http://localhost:8086/health || exit 1
       interval: 30s
       timeout: 10s
       retries: 3
@@ -302,9 +271,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       TZ: Europe/Brussels
-      FILTER_SERVICES: "label=shepherd.enable=true"
-      BLACKLIST_SERVICES: "shepherd monitoring_prometheus monitoring_grafana"
-      APPRISE_SIDECAR_URL: "services_apprise:5000" # Use service name
+      FILTER_SERVICES: label=shepherd.enable=true
+      BLACKLIST_SERVICES: shepherd monitoring_prometheus monitoring_grafana
+      APPRISE_SIDECAR_URL: services_apprise:5000
       RUN_ONCE_AND_EXIT: "true"
       ROLLBACK_ON_FAILURE: "true"
       VERBOSE: "true"
@@ -325,7 +294,6 @@ services:
       - monitoring
       - services
       - cronjob_net
-
 networks:
   monitoring:
     external: true
@@ -335,11 +303,10 @@ networks:
     external: true
   cronjob_net:
     external: true
-
 volumes:
   influxdb-data:
     driver: local
     driver_opts:
       type: nfs
       o: addr=192.168.10.10,rw,nolock,soft,timeo=14,intr
-      device: ":/volume1/influxdb"
+      device: :/volume1/influxdb

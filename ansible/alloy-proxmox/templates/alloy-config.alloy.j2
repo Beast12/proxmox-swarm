@@ -1,0 +1,178 @@
+// Grafana Alloy configuration for Proxmox
+// Collects both logs and metrics
+
+// ============================================================================
+// LOGGING CONFIGURATION
+// ============================================================================
+
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+// ============================================================================
+// METRICS COLLECTION - Node Exporter (System Metrics)
+// ============================================================================
+
+// Built-in node_exporter equivalent
+prometheus.exporter.unix "local_system" {
+  // Enable all default collectors
+  disable_collectors = []
+  
+  // Include exporter-specific metrics
+  include_exporter_metrics = true
+  
+  // Filesystem configuration
+  filesystem {
+    fs_types_exclude     = "^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$"
+    mount_points_exclude = "^/(dev|proc|run/credentials/.+|sys|var/lib/docker/.+)($|/)"
+  }
+}
+
+// Scrape metrics from the unix exporter
+prometheus.scrape "system_metrics" {
+  targets         = prometheus.exporter.unix.local_system.targets
+  forward_to      = [prometheus.relabel.add_labels.receiver]
+  scrape_interval = "{{ metrics_scrape_interval }}"
+}
+
+// Add custom labels to metrics
+prometheus.relabel "add_labels" {
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
+
+  rule {
+    target_label = "host"
+    replacement  = "{{ ansible_hostname }}"
+  }
+
+  rule {
+    target_label = "node"
+    replacement  = "{{ ansible_fqdn }}"
+  }
+
+{% if promtail_labels is defined %}
+{% for key, value in promtail_labels.items() %}
+  rule {
+    target_label = "{{ key }}"
+    replacement  = "{{ value }}"
+  }
+
+{% endfor %}
+{% endif %}
+}
+
+// Send metrics to Prometheus
+prometheus.remote_write "metrics_service" {
+  endpoint {
+    url = "{{ prometheus_url }}"
+
+{% if prometheus_username is defined and prometheus_password is defined %}
+    basic_auth {
+      username = "{{ prometheus_username }}"
+      password = "{{ prometheus_password }}"
+    }
+{% endif %}
+
+    // Queue configuration
+    queue_config {
+      capacity             = 10000
+      max_shards           = 50
+      max_samples_per_send = 5000
+    }
+  }
+}
+
+// ============================================================================
+// LOG COLLECTION - Proxmox Logs
+// ============================================================================
+
+{% for category, paths in log_paths.items() %}
+// {{ category | upper }} logs
+local.file_match "{{ category }}_logs" {
+  path_targets = [
+{% for path in paths %}
+    { __path__ = "{{ path }}" },
+{% endfor %}
+  ]
+}
+
+loki.source.file "{{ category }}_tail" {
+  targets    = local.file_match.{{ category }}_logs.targets
+  forward_to = [loki.process.{{ category }}_process.receiver]
+
+  // File watching configuration
+  file_watch {
+    min_poll_frequency = "100ms"
+    max_poll_frequency = "5s"
+  }
+}
+
+// Process {{ category }} logs
+loki.process "{{ category }}_process" {
+  forward_to = [loki.relabel.add_log_labels.receiver]
+
+  // Parse syslog format
+  stage.regex {
+    expression = "^(?P<timestamp>\\w+\\s+\\d+\\s+\\d+:\\d+:\\d+)\\s+(?P<hostname>\\S+)\\s+(?P<process>[^\\[:]+)(?:\\[(?P<pid>\\d+)\\])?:\\s+(?P<message>.*)$"
+  }
+
+  // Extract process name and pid as labels
+  stage.labels {
+    values = {
+      process = "",
+      pid     = "",
+    }
+  }
+
+  // Parse timestamp
+  stage.timestamp {
+    source = "timestamp"
+    format = "Jan _2 15:04:05"
+  }
+
+  // Output only the message
+  stage.output {
+    source = "message"
+  }
+}
+
+{% endfor %}
+
+// Add labels to all logs
+loki.relabel "add_log_labels" {
+  forward_to = [loki.write.loki_endpoint.receiver]
+
+  rule {
+    target_label = "host"
+    replacement  = "{{ ansible_hostname }}"
+  }
+
+  rule {
+    target_label = "node"
+    replacement  = "{{ ansible_fqdn }}"
+  }
+
+{% if promtail_labels is defined %}
+{% for key, value in promtail_labels.items() %}
+  rule {
+    target_label = "{{ key }}"
+    replacement  = "{{ value }}"
+  }
+
+{% endfor %}
+{% endif %}
+}
+
+// Send logs to Loki
+loki.write "loki_endpoint" {
+  endpoint {
+    url = "{{ loki_url }}"
+
+{% if loki_username is defined and loki_password is defined %}
+    basic_auth {
+      username = "{{ loki_username }}"
+      password = "{{ loki_password }}"
+    }
+{% endif %}
+  }
+}

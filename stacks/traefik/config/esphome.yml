@@ -1,0 +1,19 @@
+http:
+  routers:
+    esphome:
+      rule: "Host(`esphome.tuxito.be`)"
+      entryPoints:
+        - websecure
+      service: esphome
+      tls:
+        certResolver: letsencrypt
+        domains:
+          - main: "tuxito.be"
+            sans:
+              - "*.tuxito.be"
+
+  services:
+    esphome:
+      loadBalancer:
+        servers:
+          - url: "http://localhost:6052"

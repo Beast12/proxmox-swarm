@@ -1,150 +1,141 @@
 ---
-- name: Deploy Promtail to Proxmox Hosts
+- name: Deploy Grafana Alloy to Proxmox Cluster
   hosts: proxmox
   become: true
   vars_files:
     - vars/main.yml
 
   tasks:
-    - name: Install required packages
+    - name: Display deployment info
+      debug:
+        msg: |
+          🚀 Deploying Grafana Alloy v{{ alloy_version }}
+          📊 Metrics → {{ prometheus_url }}
+          📝 Logs → {{ loki_url }}
+          🖥️  Host: {{ ansible_hostname }}
+
+    - name: Install prerequisites
       apt:
         name:
-          - unzip
+          - apt-transport-https
+          - gpg
           - curl
-          - ca-certificates
         state: present
         update_cache: yes
 
-    - name: Create Promtail directories
+    - name: Create APT keyrings directory
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Download Grafana GPG key
+      get_url:
+        url: "{{ alloy_apt_key_url }}"
+        dest: /tmp/grafana.key
+        mode: "0644"
+
+    - name: Convert and install GPG key
+      shell: |
+        cat /tmp/grafana.key | gpg --dearmor -o /etc/apt/keyrings/grafana.asc
+        chmod 644 /etc/apt/keyrings/grafana.asc
+      args:
+        creates: /etc/apt/keyrings/grafana.asc
+
+    - name: Add Grafana APT repository
+      apt_repository:
+        repo: "{{ alloy_apt_repo }}"
+        state: present
+        filename: grafana
+
+    - name: Update APT cache
+      apt:
+        update_cache: yes
+
+    - name: Install Grafana Alloy
+      apt:
+        name: alloy
+        state: present
+
+    - name: Create Alloy directories
       file:
         path: "{{ item }}"
         state: directory
+        owner: root
+        group: root
         mode: "0755"
       loop:
-        - "{{ promtail_config_dir }}"
-        - "{{ promtail_data_dir }}"
+        - "{{ alloy_config_dir }}"
+        - "{{ alloy_data_dir }}"
 
-    - name: Check if Promtail binary exists
-      stat:
-        path: "{{ promtail_binary_path }}"
-      register: promtail_binary
+    - name: Deploy Alloy configuration
+      template:
+        src: templates/alloy-config.alloy.j2
+        dest: "{{ alloy_config_dir }}/config.alloy"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: restart alloy
 
-    - name: Get installed Promtail version
-      command: "{{ promtail_binary_path }} --version"
-      register: promtail_current_version
-      failed_when: false
+    - name: Verify Alloy configuration syntax
+      command: "/usr/bin/alloy fmt {{ alloy_config_dir }}/config.alloy --write=false"
+      register: alloy_fmt
       changed_when: false
-      when: promtail_binary.stat.exists
+      failed_when: alloy_fmt.rc != 0
 
-    - name: Download and install Promtail
-      block:
-        - name: Download Promtail
-          get_url:
-            url: "{{ promtail_download_url }}"
-            dest: /tmp/promtail.zip
-            mode: "0644"
-          register: download_result
-
-        - name: Unzip Promtail
-          unarchive:
-            src: /tmp/promtail.zip
-            dest: /tmp/
-            remote_src: yes
-
-        - name: Install Promtail binary
-          copy:
-            src: /tmp/promtail-linux-amd64
-            dest: "{{ promtail_binary_path }}"
-            mode: "0755"
-            remote_src: yes
-
-        - name: Clean up downloaded files
-          file:
-            path: "{{ item }}"
-            state: absent
-          loop:
-            - /tmp/promtail.zip
-            - /tmp/promtail-linux-amd64
-      when: >
-        not promtail_binary.stat.exists or
-        (promtail_current_version.stdout is defined and 
-         promtail_version not in promtail_current_version.stdout)
-
-    - name: Deploy Promtail configuration
-      template:
-        src: templates/promtail-config.yml.j2
-        dest: "{{ promtail_config_dir }}/config.yml"
-        mode: "0644"
-      notify: restart promtail
-
-    - name: Deploy Promtail systemd service
-      template:
-        src: templates/promtail.service.j2
-        dest: /etc/systemd/system/promtail.service
-        mode: "0644"
-      notify:
-        - reload systemd
-        - restart promtail
-
-    - name: Enable and start Promtail service
+    - name: Enable and start Alloy service
       systemd:
-        name: promtail
+        name: alloy
         enabled: yes
         state: started
+        daemon_reload: yes
 
-    - name: Wait for Promtail to be ready
+    - name: Wait for Alloy HTTP interface
       wait_for:
-        port: "{{ promtail_http_listen_port }}"
+        port: "{{ alloy_http_listen_port }}"
         delay: 2
         timeout: 30
 
-    - name: Check Promtail status
-      systemd:
-        name: promtail
-        state: started
-      register: promtail_status
-
-    - name: Verify Promtail is running
+    - name: Check Alloy health
       uri:
-        url: "http://localhost:{{ promtail_http_listen_port }}/ready"
+        url: "http://localhost:{{ alloy_http_listen_port }}/-/healthy"
         method: GET
         status_code: 200
-      register: promtail_health
-      retries: 3
-      delay: 5
-      until: promtail_health.status == 200
+      register: alloy_health
+      retries: 5
+      delay: 3
+      until: alloy_health.status == 200
+
+    - name: Display deployment success
+      debug:
+        msg: |
+          ✅ Alloy successfully deployed on {{ ansible_hostname }}
+          🌐 Web UI: http://{{ ansible_host }}:{{ alloy_http_listen_port }}
+          📊 Collecting metrics from node_exporter
+          📝 Tailing {{ log_paths | length }} log categories
 
   handlers:
-    - name: reload systemd
+    - name: restart alloy
       systemd:
-        daemon_reload: yes
-
-    - name: restart promtail
-      systemd:
-        name: promtail
+        name: alloy
         state: restarted
 
-- name: Verify deployment
+- name: Verify Deployment Across Cluster
   hosts: proxmox
   become: true
   vars_files:
     - vars/main.yml
 
   tasks:
-    - name: Display Promtail service status
-      command: systemctl status promtail --no-pager
+    - name: Get Alloy service status
+      command: systemctl status alloy --no-pager --lines=0
       register: service_status
       changed_when: false
+      failed_when: false
 
-    - name: Show service status
+    - name: Display cluster status
       debug:
-        msg: "{{ service_status.stdout_lines }}"
-
-    - name: Get recent Promtail logs
-      command: journalctl -u promtail -n 20 --no-pager
-      register: promtail_logs
-      changed_when: false
-
-    - name: Display recent logs
-      debug:
-        msg: "{{ promtail_logs.stdout_lines }}"
+        msg: |
+          Host: {{ ansible_hostname }}
+          Service: {{ 'Running ✓' if 'active (running)' in service_status.stdout else 'Not Running ✗' }}
+          Web UI: http://{{ ansible_host }}:{{ alloy_http_listen_port }}

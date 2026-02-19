@@ -1,0 +1,23 @@
+all:
+  children:
+    swarm_managers:
+      hosts:
+        swarm-manager-m1:
+          ansible_host: 192.168.10.30
+        swarm-manager-m2:
+          ansible_host: 192.168.10.31
+        swarm-manager-m3:
+          ansible_host: 192.168.10.32
+    swarm_workers:
+      hosts:
+        swarm-worker-w1:
+          ansible_host: 192.168.10.33
+        swarm-worker-w2:
+          ansible_host: 192.168.10.34
+    swarm:
+      children:
+        swarm_managers:
+        swarm_workers:
+  vars:
+    ansible_user: koen
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no"

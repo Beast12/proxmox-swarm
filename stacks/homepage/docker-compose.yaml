@@ -18,7 +18,7 @@ services:
         - "traefik.http.routers.homepage.entrypoints=websecure"
         - "traefik.http.routers.homepage.tls.certresolver=letsencrypt"
         - "traefik.http.services.homepage.loadbalancer.server.port=3000"
-        - "traefik.docker.network=proxy"
+        - "traefik.swarm.network=proxy"
         - "shepherd.enable=true"
     volumes:
       - /mnt/proxmox_swarm_data/homepage:/app/config

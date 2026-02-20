@@ -16,4 +16,4 @@ http:
     esphome:
       loadBalancer:
         servers:
-          - url: "http://localhost:6052"
+          - url: "http://192.168.10.30:6052"

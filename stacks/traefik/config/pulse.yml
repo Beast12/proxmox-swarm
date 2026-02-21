@@ -17,7 +17,7 @@ http:
       loadBalancer:
         servers:
           - url: "http://192.168.10.60:7655"
-        serversTransport: pulse-transport
+        serversTransport: pulse-transport@file
 
   serversTransports:
     pulse-transport:

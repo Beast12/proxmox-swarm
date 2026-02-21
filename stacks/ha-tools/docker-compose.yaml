@@ -3,10 +3,6 @@ services:
     image: ghcr.io/esphome/esphome
     container_name: esphome
     restart: unless-stopped
-    security_opt:
-      - apparmor:unconfined
-    ports:
-      - "6052:6052"
     environment:
       - TZ=Europe/Brussels
       - ESPHOME_DASHBOARD_USE_PING=true
@@ -21,11 +17,6 @@ services:
       - "homepage.icon=esphome.png"
       - "homepage.href=https://esphome.tuxito.be"
       - "homepage.description=ESP Device Manager"
-      - "traefik.enable=true"
-      - "traefik.http.routers.esphome.rule=Host(`esphome.tuxito.be`)"
-      - "traefik.http.routers.esphome.entrypoints=websecure"
-      - "traefik.http.routers.esphome.tls.certresolver=letsencrypt"
-      - "traefik.http.services.esphome.loadbalancer.server.port=6052"
       - "shepherd.enable=true"
 
 volumes:

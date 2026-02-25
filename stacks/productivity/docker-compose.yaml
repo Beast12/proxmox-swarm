@@ -62,6 +62,7 @@ services:
       - proxy
       - productivity-nw
       - services
+      - postgres_network
     env_file:
       - /mnt/proxmox_swarm_data/env-files/docmost.env
     volumes:

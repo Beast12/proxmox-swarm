@@ -9,6 +9,8 @@ networks:
     external: true
   cloudflared:
     external: true
+  postgres_network:
+    external: true
 
 services:
   # FossFLOW - 3D diagrams

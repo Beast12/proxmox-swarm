@@ -31,6 +31,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: "1G"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
       restart_policy:
         condition: on-failure
         max_attempts: 5
@@ -62,6 +69,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "2.00"
+          memory: "2G"
+        reservations:
+          cpus: "0.50"
+          memory: "512M"
       restart_policy:
         condition: on-failure
       labels:
@@ -95,6 +109,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "3.00"
+          memory: "4G"
+        reservations:
+          cpus: "1.00"
+          memory: "1G"
       restart_policy:
         condition: on-failure
       labels:
@@ -125,6 +146,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "1.50"
+          memory: "1536M"
+        reservations:
+          cpus: "0.50"
+          memory: "512M"
       restart_policy:
         condition: on-failure
       labels:
@@ -153,6 +181,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "2.00"
+          memory: "2G"
+        reservations:
+          cpus: "0.75"
+          memory: "768M"
       restart_policy:
         condition: on-failure
 
@@ -166,6 +201,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: "1G"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
       restart_policy:
         condition: on-failure
 
@@ -183,6 +225,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: "1G"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
       restart_policy:
         condition: on-failure
       labels:
@@ -204,6 +253,13 @@ services:
       - proxy
     deploy:
       replicas: 1
+      resources:
+        limits:
+          cpus: "1.50"
+          memory: "1536M"
+        reservations:
+          cpus: "0.50"
+          memory: "512M"
       restart_policy:
         condition: on-failure
         delay: 5s

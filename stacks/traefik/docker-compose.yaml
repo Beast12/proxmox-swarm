@@ -84,6 +84,13 @@ services:
         parallelism: 1
         delay: 10s
         order: start-first
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: "1G"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
       restart_policy:
         condition: on-failure
         delay: 5s

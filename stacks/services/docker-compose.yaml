@@ -1,3 +1,10 @@
+networks:
+  services:
+    external: true
+  proxy:
+    external: true
+  cronjob_net:
+    external: true
 services:
   redis:
     image: redis:7.2-alpine
@@ -16,6 +23,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: "1G"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -38,6 +52,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "512M"
+        reservations:
+          cpus: "0.10"
+          memory: "128M"
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -71,6 +92,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "512M"
+        reservations:
+          cpus: "0.10"
+          memory: "128M"
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -105,6 +133,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "512M"
+        reservations:
+          cpus: "0.10"
+          memory: "128M"
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -133,13 +168,13 @@ services:
       placement:
         constraints:
           - node.role == manager
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "512M"
+        reservations:
+          cpus: "0.10"
+          memory: "128M"
     networks:
       - cronjob_net
 
-networks:
-  services:
-    external: true
-  proxy:
-    external: true
-  cronjob_net:
-    external: true

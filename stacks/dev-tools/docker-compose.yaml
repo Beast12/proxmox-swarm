@@ -4,6 +4,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "2.00"
+          memory: "2G"
+        reservations:
+          cpus: "0.50"
+          memory: "512M"
       restart_policy:
         condition: any
         delay: 5s
@@ -37,6 +44,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "1.50"
+          memory: "2G"
+        reservations:
+          cpus: "0.50"
+          memory: "512M"
       restart_policy:
         condition: any
         delay: 5s

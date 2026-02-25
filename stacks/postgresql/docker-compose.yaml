@@ -29,6 +29,13 @@ services:
       proxy:
     deploy:
       replicas: 1
+      resources:
+        limits:
+          cpus: "3.00"
+          memory: "4G"
+        reservations:
+          cpus: "1.00"
+          memory: "1G"
       restart_policy:
         condition: on-failure
       placement:
@@ -57,6 +64,13 @@ services:
       - postgres_network
     deploy:
       replicas: 1
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "512M"
+        reservations:
+          cpus: "0.10"
+          memory: "128M"
       restart_policy:
         condition: on-failure
       placement:
@@ -78,6 +92,13 @@ services:
       - monitoring
     deploy:
       replicas: 1
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "512M"
+        reservations:
+          cpus: "0.10"
+          memory: "128M"
       restart_policy:
         condition: on-failure
 
@@ -92,6 +113,13 @@ services:
       - proxy
     deploy:
       replicas: 1
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: "1G"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
       restart_policy:
         condition: on-failure
       labels:

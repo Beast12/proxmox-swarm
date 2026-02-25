@@ -6,6 +6,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "1.50"
+          memory: "1536M"
+        reservations:
+          cpus: "0.50"
+          memory: "512M"
       restart_policy:
         condition: any
         delay: 5s
@@ -35,6 +42,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "512M"
+        reservations:
+          cpus: "0.10"
+          memory: "128M"
       restart_policy:
         condition: any
         delay: 5s
@@ -60,6 +74,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "512M"
+        reservations:
+          cpus: "0.10"
+          memory: "128M"
       restart_policy:
         condition: any
         delay: 5s
@@ -85,6 +106,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: "1G"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -118,6 +146,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: "1G"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
       restart_policy:
         condition: any
         delay: 5s
@@ -148,9 +183,11 @@ services:
       replicas: 1
       resources:
         limits:
-          memory: 4G
+          memory: "6G"
+          cpus: "3.00"
         reservations:
-          memory: 1G
+          memory: "1536M"
+          cpus: "1.00"
       restart_policy:
         condition: any
         delay: 5s
@@ -172,11 +209,7 @@ services:
     env_file:
       - /mnt/proxmox_swarm_data/env-files/stirling_pdf.env
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP' || exit 1",
-        ]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -194,6 +227,13 @@ services:
       placement:
         constraints:
           - node.role == manager
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: "1G"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
       restart_policy:
         condition: any
         delay: 5s

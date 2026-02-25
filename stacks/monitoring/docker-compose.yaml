@@ -20,6 +20,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "3.00"
+          memory: "4G"
+        reservations:
+          cpus: "1.00"
+          memory: "1G"
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -56,6 +63,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: "1G"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -86,6 +100,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "2.00"
+          memory: "2G"
+        reservations:
+          cpus: "0.50"
+          memory: "512M"
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -114,6 +135,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "2.00"
+          memory: "2G"
+        reservations:
+          cpus: "0.50"
+          memory: "512M"
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -144,6 +172,13 @@ services:
     command: -config.file=/etc/promtail/config.yml
     deploy:
       mode: global
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "512M"
+        reservations:
+          cpus: "0.10"
+          memory: "128M"
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -154,11 +189,18 @@ services:
       - monitoring
     volumes:
       - /mnt/proxmox_swarm_data/monitoring/config/pve-exporter/pve.yml:/etc/pve.yml:ro
-    command: --config.file=/etc/pve.yml --collector.status --collector.version
+    command: --config.file=/etc/pve.yml --collector.status --collector.version 
       --web.listen-address=:9221
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "512M"
+        reservations:
+          cpus: "0.10"
+          memory: "128M"
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -177,6 +219,13 @@ services:
       - /dev/disk/:/dev/disk:ro
     deploy:
       mode: global
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: "1G"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -198,6 +247,13 @@ services:
       - --collector.filesystem.mount-points-exclude=^/(proc|sys|dev|run|var/lib/docker/.+)($$|/)
     deploy:
       mode: global
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "512M"
+        reservations:
+          cpus: "0.10"
+          memory: "128M"
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -212,6 +268,13 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "512M"
+        reservations:
+          cpus: "0.10"
+          memory: "128M"
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -224,6 +287,13 @@ services:
       placement:
         constraints:
           - node.role == worker
+      resources:
+        limits:
+          cpus: "3.00"
+          memory: "4G"
+        reservations:
+          cpus: "1.00"
+          memory: "1G"
       restart_policy:
         condition: any
         delay: 5s
@@ -288,6 +358,13 @@ services:
         - swarm.cronjob.enable=true
         - swarm.cronjob.schedule=0 4 * * *
         - swarm.cronjob.skip-running=true
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "512M"
+        reservations:
+          cpus: "0.10"
+          memory: "128M"
       restart_policy:
         condition: none
     networks:

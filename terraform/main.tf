@@ -18,6 +18,8 @@ locals {
   cloud_image_download_node   = sort(tolist(local.swarm_nodes))[0]
   ubuntu_cloud_image_filename = replace(basename(var.ubuntu_cloud_image_url), ".img", ".qcow2")
 
+  lxc_nodes = toset(distinct([for lxc in values(var.lxc_containers) : lxc.node]))
+
   manager_keys = sort(keys(var.swarm_managers))
   keepalived_priority = {
     for idx, key in local.manager_keys : key => 150 - (idx * 20)
@@ -51,6 +53,7 @@ resource "proxmox_virtual_environment_download_file" "ubuntu_cloud_image" {
   node_name    = local.cloud_image_download_node
   datastore_id = var.cloud_image_storage
   content_type = "import"
+  overwrite    = false
 
   url       = var.ubuntu_cloud_image_url
   file_name = local.ubuntu_cloud_image_filename
@@ -128,8 +131,10 @@ locals {
     "authentik",
     "development-tools",
     "env-files",
+    "ha-tools",
     "komodo",
     "monitoring",
+    "music-assistant",
     "portainer",
     "portainer-backups",
     "services",
@@ -252,6 +257,47 @@ resource "null_resource" "plex_media_mounts" {
   }
 
   depends_on = [module.swarm_manager_vms, module.swarm_worker_vms]
+}
+
+# ==============================================================================
+# LXC CONTAINERS
+# ==============================================================================
+resource "proxmox_virtual_environment_download_file" "debian_lxc_template" {
+  for_each = local.lxc_nodes
+
+  node_name    = each.key
+  datastore_id = var.lxc_template_storage
+  content_type = "vztmpl"
+  overwrite    = false
+
+  url       = var.debian_lxc_template_url
+  file_name = basename(var.debian_lxc_template_url)
+}
+
+module "lxc_containers" {
+  for_each = var.lxc_containers
+  source   = "./modules/proxmox-lxc"
+
+  hostname = each.key
+  vmid     = each.value.vmid
+  node     = each.value.node
+  ip       = each.value.ip
+
+  cores   = each.value.cores
+  memory  = each.value.memory
+  disk_gb = each.value.disk_gb
+  storage = coalesce(each.value.storage, var.default_vm_storage)
+
+  os_template = proxmox_virtual_environment_download_file.debian_lxc_template[each.value.node].id
+
+  lan_bridge  = var.lan_bridge
+  lan_gateway = var.lan_gateway
+  lan_dns     = var.lan_dns
+
+  ssh_public_keys = var.ssh_public_keys
+  tags            = concat(local.tags_common, ["lxc"])
+
+  nfs_mounts = each.value.nfs_mounts
 }
 
 # ==============================================================================

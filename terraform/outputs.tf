@@ -22,3 +22,13 @@ output "first_manager_ip" {
   description = "First manager IP for SSH/initialization"
   value       = values(module.swarm_manager_vms)[0].ipv4_address
 }
+
+output "lxc_containers" {
+  description = "LXC container IPs and hostnames"
+  value = {
+    for name, container in module.lxc_containers : name => {
+      ip       = container.ip
+      hostname = container.hostname
+    }
+  }
+}

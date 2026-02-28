@@ -48,7 +48,7 @@ variable "snippet_storage" {
 }
 
 variable "ubuntu_cloud_image_url" {
-  description = "Ubuntu cloud image URL"
+  description = "Ubuntu cloud image source URL for downloading new pinned images"
   type        = string
   default     = "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img"
 }
@@ -186,4 +186,39 @@ variable "swarm_workers" {
     disk_gb         = number
     gpu_passthrough = bool
   }))
+}
+
+# ==============================================================================
+# LXC CONTAINERS
+# ==============================================================================
+variable "lxc_template_storage" {
+  description = "Datastore to download the Debian LXC template onto each node (must support vztmpl content)"
+  type        = string
+  default     = "local"
+}
+
+variable "debian_lxc_template_url" {
+  description = "Pinned Debian LXC template URL from the Proxmox image repository"
+  type        = string
+  default     = "http://download.proxmox.com/images/system/debian-13-standard_13.1-2_amd64.tar.zst"
+}
+
+variable "lxc_containers" {
+  description = "LXC containers to create on Proxmox nodes"
+  type = map(object({
+    vmid    = number
+    node    = string
+    ip      = string
+    cores   = number
+    memory  = number
+    disk_gb = number
+    storage = optional(string) # omit to use default_vm_storage
+    nfs_mounts = optional(list(object({
+      server  = string
+      export  = string
+      mount   = string
+      options = optional(string, "defaults,_netdev,nofail")
+    })), [])
+  }))
+  default = {}
 }

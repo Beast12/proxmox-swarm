@@ -209,7 +209,11 @@ services:
     env_file:
       - /mnt/proxmox_swarm_data/env-files/stirling_pdf.env
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP' || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP' || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -261,6 +265,43 @@ services:
     networks:
       - proxy
       - tools_internal
+  withoutbg:
+    image: withoutbg/app:latest
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: "4G"
+        reservations:
+          cpus: "0.25"
+          memory: "2G"
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "homepage.group=Tools"
+        - "homepage.name=WithoutBG"
+        - "homepage.icon=synology-photo-station.png"
+        - "homepage.href=https://withoutbg.tuxito.be"
+        - "homepage.description=Background Removal Tool"
+        - "traefik.enable=true"
+        - "traefik.http.routers.withoutbg.rule=Host(`withoutbg.tuxito.be`)"
+        - "traefik.http.routers.withoutbg.entrypoints=websecure"
+        - "traefik.http.routers.withoutbg.tls.certresolver=letsencrypt"
+        - "traefik.http.services.withoutbg.loadbalancer.server.port=80"
+        - "traefik.swarm.network=proxy"
+    healthcheck:
+      test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/80' || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    restart: on-failure:5
+    networks:
+      - proxy
 
 networks:
   proxy:

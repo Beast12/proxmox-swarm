@@ -129,6 +129,7 @@ module "swarm_worker_vms" {
 locals {
   swarm_data_dirs = [
     "authentik",
+    "bar-assistant",
     "development-tools",
     "env-files",
     "ha-tools",

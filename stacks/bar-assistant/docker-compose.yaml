@@ -14,8 +14,6 @@ services:
     env_file:
       - /mnt/proxmox_swarm_data/env-files/bar-assistant.env
     environment:
-      APP_URL: https://bar.tuxito.be/bar
-      MEILISEARCH_HOST: http://meilisearch:7700
       REDIS_HOST: redis
       CACHE_DRIVER: redis
       SESSION_DRIVER: redis

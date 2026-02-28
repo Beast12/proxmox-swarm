@@ -14,11 +14,13 @@ services:
     env_file:
       - /mnt/proxmox_swarm_data/env-files/bar-assistant.env
     environment:
-      MEILISEARCH_HOST: http://bar_meilisearch:7700
+      APP_URL: https://bar.tuxito.be/bar
+      MEILISEARCH_HOST: http://meilisearch:7700
       REDIS_HOST: redis
       CACHE_DRIVER: redis
       SESSION_DRIVER: redis
       QUEUE_CONNECTION: redis
+      ALLOW_REGISTRATION: "true"
     volumes:
       - /mnt/proxmox_swarm_data/bar-assistant/data:/var/www/cocktails/storage/bar-assistant:rw
     networks:
@@ -41,17 +43,22 @@ services:
         max_attempts: 5
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.bar-assistant-api.rule=Host(`bar-api.tuxito.be`)"
+        - "traefik.http.routers.bar-assistant-api.rule=Host(`bar.tuxito.be`) && PathPrefix(`/bar`)"
         - "traefik.http.routers.bar-assistant-api.entrypoints=websecure"
         - "traefik.http.routers.bar-assistant-api.tls=true"
         - "traefik.http.routers.bar-assistant-api.tls.certresolver=letsencrypt"
-        - "traefik.http.services.bar-assistant-api.loadbalancer.server.port=80"
+        - "traefik.http.middlewares.bar-assistant-strip.stripprefix.prefixes=/bar"
+        - "traefik.http.routers.bar-assistant-api.middlewares=bar-assistant-strip"
+        - "traefik.http.services.bar-assistant-api.loadbalancer.server.port=8080"
         - "traefik.swarm.network=proxy"
 
   salt-rim:
     image: barassistant/salt-rim:v4
     env_file:
       - /mnt/proxmox_swarm_data/env-files/bar-assistant.env
+    environment:
+      API_URL: https://bar.tuxito.be/bar
+      MEILISEARCH_URL: https://bar.tuxito.be/search
     networks:
       - proxy
       - bar-assistant_internal
@@ -75,7 +82,7 @@ services:
         - "traefik.http.routers.bar-assistant.entrypoints=websecure"
         - "traefik.http.routers.bar-assistant.tls=true"
         - "traefik.http.routers.bar-assistant.tls.certresolver=letsencrypt"
-        - "traefik.http.services.bar-assistant.loadbalancer.server.port=80"
+        - "traefik.http.services.bar-assistant.loadbalancer.server.port=8080"
         - "traefik.swarm.network=proxy"
 
   meilisearch:
@@ -86,10 +93,12 @@ services:
       MEILI_NO_ANALYTICS: "true"
       MEILI_ENV: production
     volumes:
-      - /mnt/proxmox_swarm_data/bar-assistant/:/meili_data:rw
+      - /mnt/proxmox_swarm_data/bar-assistant/meilisearch:/meili_data:rw
     networks:
-      - proxy
-      - bar-assistant_internal
+      proxy:
+      bar-assistant_internal:
+        aliases:
+          - meilisearch
     deploy:
       mode: replicated
       replicas: 1
@@ -106,9 +115,11 @@ services:
         max_attempts: 5
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.bar-assistant-search.rule=Host(`bar-search.tuxito.be`)"
+        - "traefik.http.routers.bar-assistant-search.rule=Host(`bar.tuxito.be`) && PathPrefix(`/search`)"
         - "traefik.http.routers.bar-assistant-search.entrypoints=websecure"
         - "traefik.http.routers.bar-assistant-search.tls=true"
         - "traefik.http.routers.bar-assistant-search.tls.certresolver=letsencrypt"
+        - "traefik.http.middlewares.bar-assistant-search-strip.stripprefix.prefixes=/search"
+        - "traefik.http.routers.bar-assistant-search.middlewares=bar-assistant-search-strip"
         - "traefik.http.services.bar-assistant-search.loadbalancer.server.port=7700"
         - "traefik.swarm.network=proxy"

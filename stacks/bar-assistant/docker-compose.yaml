@@ -14,6 +14,7 @@ services:
     env_file:
       - /mnt/proxmox_swarm_data/env-files/bar-assistant.env
     environment:
+      APP_URL: https://bar-api.tuxito.be
       REDIS_HOST: redis
       CACHE_DRIVER: redis
       SESSION_DRIVER: redis
@@ -41,13 +42,10 @@ services:
         max_attempts: 5
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.bar-assistant-api.rule=Host(`bar.tuxito.be`) && PathPrefix(`/bar`)"
+        - "traefik.http.routers.bar-assistant-api.rule=Host(`bar-api.tuxito.be`)"
         - "traefik.http.routers.bar-assistant-api.entrypoints=websecure"
-        - "traefik.http.routers.bar-assistant-api.priority=200"
         - "traefik.http.routers.bar-assistant-api.tls=true"
         - "traefik.http.routers.bar-assistant-api.tls.certresolver=letsencrypt"
-        - "traefik.http.middlewares.bar-assistant-strip.stripprefix.prefixes=/bar"
-        - "traefik.http.routers.bar-assistant-api.middlewares=bar-assistant-strip"
         - "traefik.http.services.bar-assistant-api.loadbalancer.server.port=8080"
         - "traefik.swarm.network=proxy"
 
@@ -56,8 +54,8 @@ services:
     env_file:
       - /mnt/proxmox_swarm_data/env-files/bar-assistant.env
     environment:
-      API_URL: https://bar.tuxito.be/bar
-      MEILISEARCH_URL: https://bar.tuxito.be/search
+      API_URL: https://bar-api.tuxito.be
+      MEILISEARCH_URL: https://bar-search.tuxito.be
     networks:
       - proxy
       - bar-assistant_internal
@@ -79,7 +77,6 @@ services:
         - "traefik.enable=true"
         - "traefik.http.routers.bar-assistant.rule=Host(`bar.tuxito.be`)"
         - "traefik.http.routers.bar-assistant.entrypoints=websecure"
-        - "traefik.http.routers.bar-assistant.priority=10"
         - "traefik.http.routers.bar-assistant.tls=true"
         - "traefik.http.routers.bar-assistant.tls.certresolver=letsencrypt"
         - "traefik.http.services.bar-assistant.loadbalancer.server.port=8080"
@@ -115,12 +112,9 @@ services:
         max_attempts: 5
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.bar-assistant-search.rule=Host(`bar.tuxito.be`) && PathPrefix(`/search`)"
+        - "traefik.http.routers.bar-assistant-search.rule=Host(`bar-search.tuxito.be`)"
         - "traefik.http.routers.bar-assistant-search.entrypoints=websecure"
-        - "traefik.http.routers.bar-assistant-search.priority=200"
         - "traefik.http.routers.bar-assistant-search.tls=true"
         - "traefik.http.routers.bar-assistant-search.tls.certresolver=letsencrypt"
-        - "traefik.http.middlewares.bar-assistant-search-strip.stripprefix.prefixes=/search"
-        - "traefik.http.routers.bar-assistant-search.middlewares=bar-assistant-search-strip"
         - "traefik.http.services.bar-assistant-search.loadbalancer.server.port=7700"
         - "traefik.swarm.network=proxy"

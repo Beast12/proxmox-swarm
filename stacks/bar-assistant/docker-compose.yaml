@@ -14,7 +14,7 @@ services:
     env_file:
       - /mnt/proxmox_swarm_data/env-files/bar-assistant.env
     environment:
-      MEILISEARCH_HOST: http://meilisearch:7700
+      MEILISEARCH_HOST: http://bar_meilisearch:7700
       REDIS_HOST: redis
       CACHE_DRIVER: redis
       SESSION_DRIVER: redis
@@ -86,7 +86,7 @@ services:
       MEILI_NO_ANALYTICS: "true"
       MEILI_ENV: production
     volumes:
-      - /mnt/proxmox_swarm_data/bar-assistant/meilisearch:/meili_data:rw
+      - /mnt/proxmox_swarm_data/bar-assistant/:/meili_data:rw
     networks:
       - proxy
       - bar-assistant_internal

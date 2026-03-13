@@ -36,7 +36,7 @@ services:
         - "traefik.http.routers.dockhand.rule=Host(`dockhand.tuxito.be`)"
         - "traefik.http.routers.dockhand.entrypoints=websecure"
         - "traefik.http.routers.dockhand.tls.certresolver=letsencrypt"
-        - "traefik.http.services.dockhand.loadbalancer.server.port=3000"
+        - "traefik.http.services.dockhand.loadbalancer.server.port=5173"
         - "traefik.swarm.network=proxy"
         - "shepherd.enable=true"
 

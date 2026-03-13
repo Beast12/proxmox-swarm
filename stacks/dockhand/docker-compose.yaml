@@ -5,7 +5,7 @@ services:
       - /mnt/proxmox_swarm_data/env-files/dockhand.env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /mnt/proxmox_swarm_data/dockhand/data:/app/data:rw
+      - /mnt/proxmox_swarm_data/dockhand:/app/data:rw
     networks:
       - proxy
       - dockhand_internal

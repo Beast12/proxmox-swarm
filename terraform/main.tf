@@ -131,6 +131,7 @@ locals {
     "authentik",
     "bar-assistant",
     "development-tools",
+    "dockhand",
     "env-files",
     "ha-tools",
     "komodo",

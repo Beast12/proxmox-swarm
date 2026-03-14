@@ -1,0 +1,31 @@
+---
+plex_compose_dir: /opt/plex
+plex_env_file: /mnt/proxmox_swarm_data/env-files/plex.env
+plex_config_dir: /mnt/proxmox_swarm_data/plex/config
+
+plex_image: lscr.io/linuxserver/plex:latest
+plex_timezone: Europe/Brussels
+plex_published_ports:
+  - "32400:32400/tcp"
+  - "3005:3005/tcp"
+  - "8324:8324/tcp"
+  - "32469:32469/tcp"
+  - "1900:1900/udp"
+  - "32410:32410/udp"
+  - "32412:32412/udp"
+  - "32413:32413/udp"
+  - "32414:32414/udp"
+
+plex_media_mounts:
+  - /mnt/nfs/media-nas/movies:/media/movies
+  - /mnt/nfs/media-nas/tv:/media/tv
+  - /mnt/nfs/media-nas/music:/media/music
+  - /mnt/nfs/media-nas/cartoons:/media/cartoons
+  - /mnt/nfs/media-nas/comedy:/media/comedy
+  - /mnt/nfs/media-nas/audiobooks:/media/audiobooks
+  - /mnt/nfs/media-nas/comics:/media/comics
+
+plex_enable_hw_transcode: false
+plex_dri_device: /dev/dri
+plex_transcode_tmpfs_size: 8g
+

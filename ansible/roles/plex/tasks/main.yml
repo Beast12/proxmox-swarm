@@ -1,0 +1,49 @@
+---
+- name: Install Docker prerequisites
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - docker.io
+      - docker-compose-plugin
+    state: present
+    update_cache: yes
+
+- name: Enable and start Docker
+  ansible.builtin.systemd:
+    name: docker
+    enabled: yes
+    state: started
+
+- name: Create Plex compose directory
+  ansible.builtin.file:
+    path: "{{ plex_compose_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create Plex config directory
+  ansible.builtin.file:
+    path: "{{ plex_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy Plex compose file
+  ansible.builtin.template:
+    src: plex-compose.yaml.j2
+    dest: "{{ plex_compose_dir }}/docker-compose.yaml"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: deploy plex
+
+- name: Deploy/update Plex container
+  ansible.builtin.command: docker compose up -d
+  args:
+    chdir: "{{ plex_compose_dir }}"
+  register: plex_up
+  changed_when: "'Started' in plex_up.stdout or 'Recreated' in plex_up.stdout or 'Created' in plex_up.stdout"
+

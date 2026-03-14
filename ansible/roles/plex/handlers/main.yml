@@ -1,0 +1,7 @@
+---
+- name: deploy plex
+  ansible.builtin.command: docker compose up -d
+  args:
+    chdir: "{{ plex_compose_dir }}"
+  changed_when: true
+

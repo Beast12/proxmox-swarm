@@ -1,0 +1,11 @@
+all:
+  children:
+    plex:
+      hosts:
+        plex-lxc:
+          ansible_host: 192.168.10.107
+  vars:
+    ansible_user: root
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
+

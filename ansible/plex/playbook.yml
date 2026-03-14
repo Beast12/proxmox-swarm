@@ -1,0 +1,9 @@
+---
+- name: Install and Deploy Plex on LXC
+  hosts: plex
+  become: true
+  gather_facts: true
+
+  roles:
+    - plex
+

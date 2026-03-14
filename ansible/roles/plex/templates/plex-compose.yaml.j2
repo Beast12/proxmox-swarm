@@ -1,0 +1,27 @@
+services:
+  plex:
+    image: {{ plex_image }}
+    container_name: plex
+    restart: unless-stopped
+    hostname: plex
+    env_file:
+      - {{ plex_env_file }}
+    environment:
+      - TZ={{ plex_timezone }}
+      - VERSION=docker
+    ports:
+{% for p in plex_published_ports %}
+      - "{{ p }}"
+{% endfor %}
+    volumes:
+      - {{ plex_config_dir }}:/config
+{% for m in plex_media_mounts %}
+      - {{ m }}
+{% endfor %}
+    tmpfs:
+      - /transcode:rw,size={{ plex_transcode_tmpfs_size }}
+{% if plex_enable_hw_transcode %}
+    devices:
+      - {{ plex_dri_device }}:{{ plex_dri_device }}
+{% endif %}
+

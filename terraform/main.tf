@@ -134,6 +134,7 @@ locals {
     "dockhand",
     "env-files",
     "ha-tools",
+    "jellyfin",
     "komodo",
     "monitoring",
     "music-assistant",

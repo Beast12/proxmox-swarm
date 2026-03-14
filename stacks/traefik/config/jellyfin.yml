@@ -1,0 +1,20 @@
+http:
+  routers:
+    jellyfin:
+      rule: "Host(`jellyfin.tuxito.be`)"
+      entryPoints:
+        - websecure
+      service: jellyfin
+      tls:
+        certResolver: letsencrypt
+        domains:
+          - main: "tuxito.be"
+            sans:
+              - "*.tuxito.be"
+
+  services:
+    jellyfin:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.107:8096"
+

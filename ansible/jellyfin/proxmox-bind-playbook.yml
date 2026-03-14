@@ -1,13 +1,13 @@
 ---
-- name: Configure Proxmox host mounts and LXC bind mounts for Plex
-  hosts: proxmox_plex_host
+- name: Configure Proxmox host mounts and LXC bind mounts for Jellyfin
+  hosts: proxmox_jellyfin_host
   become: true
   gather_facts: true
 
   vars:
-    plex_lxc_vmid: 107
+    jellyfin_lxc_vmid: 107
 
-    plex_host_nfs_mounts:
+    jellyfin_host_nfs_mounts:
       - src: "192.168.10.10:/volume1/proxmox_swarm_data"
         path: "/mnt/proxmox_swarm_data"
       - src: "192.168.10.9:/volume1/Movies"
@@ -25,10 +25,10 @@
       - src: "192.168.10.9:/volume1/Comics"
         path: "/mnt/nfs/media-nas/comics"
 
-    plex_lxc_bind_mounts:
+    jellyfin_lxc_bind_mounts:
       - id: 0
-        source: "/mnt/proxmox_swarm_data/plex"
-        target: "/mnt/proxmox_swarm_data/plex"
+        source: "/mnt/proxmox_swarm_data/jellyfin"
+        target: "/mnt/proxmox_swarm_data/jellyfin"
         read_only: false
       - id: 1
         source: "/mnt/nfs/media-nas/movies"
@@ -71,7 +71,7 @@
         path: "{{ item.path }}"
         state: directory
         mode: "0755"
-      loop: "{{ plex_host_nfs_mounts }}"
+      loop: "{{ jellyfin_host_nfs_mounts }}"
 
     - name: Ensure NFS fstab entries are present on Proxmox host
       ansible.builtin.lineinfile:
@@ -79,7 +79,7 @@
         regexp: "^{{ item.src | regex_escape }}\\s+{{ item.path | regex_escape }}\\s+nfs\\s"
         line: "{{ item.src }} {{ item.path }} nfs defaults,nfsvers=3,rw,_netdev,nofail,x-systemd.automount,x-systemd.idle-timeout=600,x-systemd.device-timeout=30s 0 0"
         state: present
-      loop: "{{ plex_host_nfs_mounts }}"
+      loop: "{{ jellyfin_host_nfs_mounts }}"
 
     - name: Reload systemd and mount NFS entries
       ansible.builtin.shell: |
@@ -89,25 +89,24 @@
       args:
         executable: /bin/bash
 
-    - name: Check Plex LXC exists
-      ansible.builtin.command: "pct status {{ plex_lxc_vmid }}"
+    - name: Check Jellyfin LXC exists
+      ansible.builtin.command: "pct status {{ jellyfin_lxc_vmid }}"
       changed_when: false
 
     - name: Apply LXC bind mounts
       ansible.builtin.command: >-
-        pct set {{ plex_lxc_vmid }}
+        pct set {{ jellyfin_lxc_vmid }}
         -mp{{ item.id }}
         {{ item.source }},mp={{ item.target }}{{ ',ro=1' if item.read_only else '' }}
-      loop: "{{ plex_lxc_bind_mounts }}"
+      loop: "{{ jellyfin_lxc_bind_mounts }}"
 
-    - name: Restart Plex LXC to apply mount updates
+    - name: Restart Jellyfin LXC to apply mount updates
       ansible.builtin.shell: |
         set -euo pipefail
-        if pct status {{ plex_lxc_vmid }} | grep -q running; then
-          pct reboot {{ plex_lxc_vmid }}
+        if pct status {{ jellyfin_lxc_vmid }} | grep -q running; then
+          pct reboot {{ jellyfin_lxc_vmid }}
         else
-          pct start {{ plex_lxc_vmid }}
+          pct start {{ jellyfin_lxc_vmid }}
         fi
       args:
         executable: /bin/bash
-

@@ -1,0 +1,9 @@
+---
+- name: Install and Configure Jellyfin on LXC
+  hosts: jellyfin
+  become: true
+  gather_facts: true
+
+  roles:
+    - jellyfin
+

@@ -1,0 +1,16 @@
+---
+jellyfin_package_name: jellyfin
+jellyfin_service_name: jellyfin
+
+jellyfin_apt_repo_base: "https://repo.jellyfin.org/debian"
+jellyfin_repo_codename: "{{ ansible_distribution_release }}"
+jellyfin_apt_repo: "deb [signed-by=/usr/share/keyrings/jellyfin.gpg] {{ jellyfin_apt_repo_base }} {{ jellyfin_repo_codename }} main"
+jellyfin_apt_key_url: "https://repo.jellyfin.org/jellyfin_team.gpg.key"
+
+jellyfin_data_dir: /mnt/proxmox_swarm_data/jellyfin
+jellyfin_config_dir: /mnt/proxmox_swarm_data/jellyfin/config
+jellyfin_cache_dir: /mnt/proxmox_swarm_data/jellyfin/cache
+jellyfin_log_dir: /mnt/proxmox_swarm_data/jellyfin/log
+
+jellyfin_enable_hw_transcode: false
+

@@ -1,0 +1,6 @@
+---
+- name: restart jellyfin
+  ansible.builtin.systemd:
+    name: "{{ jellyfin_service_name }}"
+    state: restarted
+

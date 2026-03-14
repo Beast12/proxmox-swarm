@@ -1,0 +1,132 @@
+---
+- name: Install and Configure Hawser on Docker Hosts
+  hosts: swarm
+  become: true
+  gather_facts: true
+  vars_files:
+    - vars/main.yml
+
+  pre_tasks:
+    - name: Validate Hawser mode
+      ansible.builtin.assert:
+        that:
+          - hawser_mode in ["standard", "edge"]
+        fail_msg: "hawser_mode must be 'standard' or 'edge'"
+
+    - name: Resolve Hawser architecture
+      ansible.builtin.set_fact:
+        hawser_arch: "{{ hawser_arch_map[ansible_architecture] | default('amd64') }}"
+
+    - name: Build Hawser release artifact names
+      ansible.builtin.set_fact:
+        hawser_archive_name: "hawser_{{ hawser_version }}_linux_{{ hawser_arch }}.tar.gz"
+        hawser_archive_url: "https://github.com/Finsys/hawser/releases/download/v{{ hawser_version }}/hawser_{{ hawser_version }}_linux_{{ hawser_arch }}.tar.gz"
+        hawser_archive_checksum: "{{ hawser_checksum_map[hawser_arch] | default('') }}"
+
+  tasks:
+    - name: Install prerequisites
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - tar
+        state: present
+        update_cache: yes
+
+    - name: Create Hawser config directory
+      ansible.builtin.file:
+        path: "{{ hawser_config_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Create Hawser stacks directory
+      ansible.builtin.file:
+        path: "{{ hawser_stacks_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Download Hawser archive (checksum verified when available)
+      ansible.builtin.get_url:
+        url: "{{ hawser_archive_url }}"
+        dest: "/tmp/{{ hawser_archive_name }}"
+        mode: "0644"
+        checksum: "{{ ('sha256:' + hawser_archive_checksum) if hawser_archive_checksum | length > 0 else omit }}"
+
+    - name: Create extraction directory
+      ansible.builtin.file:
+        path: /tmp/hawser-install
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Extract Hawser archive
+      ansible.builtin.unarchive:
+        src: "/tmp/{{ hawser_archive_name }}"
+        dest: /tmp/hawser-install
+        remote_src: true
+
+    - name: Install Hawser binary
+      ansible.builtin.copy:
+        src: /tmp/hawser-install/hawser
+        dest: /usr/local/bin/hawser
+        owner: root
+        group: root
+        mode: "0755"
+        remote_src: true
+      notify: restart hawser
+
+    - name: Deploy Hawser environment config
+      ansible.builtin.template:
+        src: templates/hawser-config.env.j2
+        dest: "{{ hawser_config_file }}"
+        owner: root
+        group: root
+        mode: "0640"
+      notify: restart hawser
+
+    - name: Deploy Hawser systemd unit
+      ansible.builtin.template:
+        src: templates/hawser.service.j2
+        dest: "{{ hawser_service_file }}"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: restart hawser
+
+    - name: Enable and start Hawser service
+      ansible.builtin.systemd:
+        name: hawser
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    - name: Wait for Hawser health endpoint
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ hawser_port }}/_hawser/health"
+        method: GET
+        status_code: 200
+      register: hawser_health
+      retries: 10
+      delay: 3
+      until: hawser_health.status == 200
+      changed_when: false
+
+    - name: Show Hawser deployment result
+      ansible.builtin.debug:
+        msg: |
+          Hawser deployed on {{ inventory_hostname }}
+          Mode: {{ hawser_mode }}
+          Port: {{ hawser_port }}
+          Agent name: {{ hawser_agent_name | default(inventory_hostname) }}
+
+  handlers:
+    - name: restart hawser
+      ansible.builtin.systemd:
+        name: hawser
+        state: restarted
+        daemon_reload: yes

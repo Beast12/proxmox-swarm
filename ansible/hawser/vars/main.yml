@@ -1,0 +1,42 @@
+---
+# Hawser release version (without leading "v")
+hawser_version: "0.2.37"
+
+# Config and service paths
+hawser_config_dir: /etc/hawser
+hawser_config_file: /etc/hawser/config
+hawser_service_file: /etc/systemd/system/hawser.service
+hawser_stacks_dir: /data/stacks
+
+# Architecture mapping from Ansible fact to Hawser release arch
+hawser_arch_map:
+  x86_64: amd64
+  amd64: amd64
+  aarch64: arm64
+  arm64: arm64
+  armv7l: arm
+
+# Optional checksums by arch (sha256, no prefix)
+# Source: https://github.com/Finsys/hawser/releases/latest
+hawser_checksum_map:
+  amd64: "2d081794f26e4df25d6c1ce8e505a70d958cff3eaab2c969f0aae57960ba1e58"
+
+# Runtime defaults
+hawser_mode: standard # standard | edge
+hawser_port: 2376
+hawser_bind_address: 0.0.0.0
+hawser_docker_socket: /var/run/docker.sock
+hawser_agent_name: "{{ inventory_hostname }}"
+hawser_log_level: info
+
+# Authentication/token
+hawser_token: "91206a40d3e22a555d76e459328133fd5d3df36584fb05317b5401df917e8abe0ccbc4697781017d4537357773834fcca85f684cda307f9cf5eccc4942606475"
+
+# Edge mode settings
+hawser_dockhand_server_url: "wss://dockhand.tuxito.be/api/hawser/connect"
+hawser_ca_cert: ""
+hawser_tls_skip_verify: false
+
+# Standard mode optional TLS
+hawser_tls_cert: ""
+hawser_tls_key: ""

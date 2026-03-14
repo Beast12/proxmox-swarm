@@ -1,0 +1,32 @@
+services:
+  dockhand:
+    image: fnsys/dockhand:latest
+    restart: unless-stopped
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/dockhand.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /mnt/proxmox_swarm_data/dockhand:/app/data:rw
+    labels:
+      - "homepage.group=Infrastructure"
+      - "homepage.name=Dockhand"
+      - "homepage.icon=dockhand.png"
+      - "homepage.href=https://dockhand.tuxito.be"
+      - "homepage.description=Docker & Compose Management"
+      - "traefik.enable=true"
+      - "traefik.http.routers.dockhand.rule=Host(`dockhand.tuxito.be`)"
+      - "traefik.http.routers.dockhand.entrypoints=websecure"
+      - "traefik.http.routers.dockhand.tls.certresolver=letsencrypt"
+      - "traefik.http.services.dockhand.loadbalancer.server.port=5173"
+      - "traefik.docker.network=proxy"
+      - "shepherd.enable=true"
+    networks:
+      - proxy
+      - dockhand_internal
+
+networks:
+  proxy:
+    external: true
+  dockhand_internal:
+    driver: bridge
+

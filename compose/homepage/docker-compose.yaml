@@ -1,0 +1,26 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.homepage.rule=Host(`homepage.tuxito.be`)"
+      - "traefik.http.routers.homepage.entrypoints=websecure"
+      - "traefik.http.routers.homepage.tls.certresolver=letsencrypt"
+      - "traefik.http.services.homepage.loadbalancer.server.port=3000"
+      - "traefik.docker.network=proxy"
+      - "shepherd.enable=true"
+    volumes:
+      - /mnt/proxmox_swarm_data/homepage:/app/config
+      - /mnt/proxmox_swarm_data/homepage/images:/app/public/images:ro
+      - /mnt/proxmox_swarm_data:/mnt/proxmox_swarm_data:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: homepage.tuxito.be
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
+

@@ -1,0 +1,202 @@
+services:
+  convertx:
+    image: ghcr.io/c4illin/convertx:latest
+    restart: unless-stopped
+    labels:
+      - "homepage.group=Tools"
+      - "homepage.name=ConvertX"
+      - "homepage.icon=convertx.png"
+      - "homepage.href=https://convert.tuxito.be"
+      - "homepage.description=File Converter (1000+ formats)"
+      - "traefik.enable=true"
+      - "traefik.http.routers.convertx.rule=Host(`convert.tuxito.be`)"
+      - "traefik.http.routers.convertx.entrypoints=websecure"
+      - "traefik.http.routers.convertx.tls.certresolver=letsencrypt"
+      - "traefik.http.services.convertx.loadbalancer.server.port=3000"
+      - "traefik.docker.network=proxy"
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/convertx.env
+    volumes:
+      - /mnt/proxmox_swarm_data/tools/convertx:/app/data
+    networks:
+      - proxy
+      - tools_internal
+
+  it-tools:
+    image: corentinth/it-tools:latest
+    restart: unless-stopped
+    labels:
+      - "homepage.group=Tools"
+      - "homepage.name=IT-Tools"
+      - "homepage.icon=it-tools-light.svg"
+      - "homepage.href=https://tools.tuxito.be"
+      - "homepage.description=Developer Tools Collection"
+      - "traefik.enable=true"
+      - "traefik.http.routers.it-tools.rule=Host(`tools.tuxito.be`)"
+      - "traefik.http.routers.it-tools.entrypoints=websecure"
+      - "traefik.http.routers.it-tools.tls.certresolver=letsencrypt"
+      - "traefik.http.services.it-tools.loadbalancer.server.port=80"
+      - "traefik.docker.network=proxy"
+    networks:
+      - proxy
+      - tools_internal
+
+  qrding:
+    image: ghcr.io/rishikanthc/qrding:latest
+    restart: unless-stopped
+    labels:
+      - "homepage.group=Tools"
+      - "homepage.name=QRding"
+      - "homepage.icon=mdi-qrcode"
+      - "homepage.href=https://qr.tuxito.be"
+      - "homepage.description=QR Code Generator"
+      - "traefik.enable=true"
+      - "traefik.http.routers.qrding.rule=Host(`qr.tuxito.be`)"
+      - "traefik.http.routers.qrding.entrypoints=websecure"
+      - "traefik.http.routers.qrding.tls.certresolver=letsencrypt"
+      - "traefik.http.services.qrding.loadbalancer.server.port=3000"
+      - "traefik.docker.network=proxy"
+    networks:
+      - proxy
+      - tools_internal
+
+  freshrss:
+    image: ghcr.io/linuxserver/freshrss:latest
+    restart: unless-stopped
+    labels:
+      - "homepage.group=Tools"
+      - "homepage.name=FreshRSS"
+      - "homepage.icon=freshrss"
+      - "homepage.href=https://rss.tuxito.be"
+      - "homepage.description=RSS Feed Reader"
+      - "traefik.enable=true"
+      - "traefik.http.routers.freshrss.rule=Host(`rss.tuxito.be`)"
+      - "traefik.http.routers.freshrss.entrypoints=websecure"
+      - "traefik.http.routers.freshrss.tls.certresolver=letsencrypt"
+      - "traefik.http.services.freshrss.loadbalancer.server.port=80"
+      - "traefik.docker.network=proxy"
+    volumes:
+      - /mnt/proxmox_swarm_data/tools/freshrss:/config:rw
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - proxy
+      - tools_internal
+
+  pairdrop:
+    image: lscr.io/linuxserver/pairdrop:latest
+    restart: unless-stopped
+    labels:
+      - "homepage.group=Tools"
+      - "homepage.name=PairDrop"
+      - "homepage.icon=pairdrop.png"
+      - "homepage.href=https://pairdrop.tuxito.be"
+      - "homepage.description=Cross-platform File Sharing"
+      - "traefik.enable=true"
+      - "traefik.http.routers.pairdrop.rule=Host(`pairdrop.tuxito.be`)"
+      - "traefik.http.routers.pairdrop.entrypoints=websecure"
+      - "traefik.http.routers.pairdrop.tls.certresolver=letsencrypt"
+      - "traefik.http.services.pairdrop.loadbalancer.server.port=3000"
+      - "traefik.docker.network=proxy"
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/pairdrop.env
+    networks:
+      - proxy
+      - tools_internal
+
+  stirling-pdf:
+    image: stirlingtools/stirling-pdf:latest-fat
+    user: "0:0"
+    restart: unless-stopped
+    labels:
+      - "homepage.group=Tools"
+      - "homepage.name=Stirling PDF"
+      - "homepage.icon=stirling-pdf.svg"
+      - "homepage.href=https://pdf.tuxito.be"
+      - "homepage.description=PDF Manipulation Toolkit"
+      - "traefik.enable=true"
+      - "traefik.http.routers.stirling-pdf.rule=Host(`pdf.tuxito.be`)"
+      - "traefik.http.routers.stirling-pdf.entrypoints=websecure"
+      - "traefik.http.routers.stirling-pdf.tls.certresolver=letsencrypt"
+      - "traefik.http.services.stirling-pdf.loadbalancer.server.port=8080"
+      - "traefik.docker.network=proxy"
+    volumes:
+      - /mnt/proxmox_swarm_data/tools/stirling-pdf:/configs:rw
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/stirling_pdf.env
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:8080/api/v1/info/status | grep -q 'UP' || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    networks:
+      - proxy
+      - tools_internal
+
+  cronmaster:
+    image: ghcr.io/fccview/cronmaster:main
+    user: "root"
+    restart: unless-stopped
+    labels:
+      - "homepage.group=Tools"
+      - "homepage.name=CronMaster"
+      - "homepage.icon=cron-master.png"
+      - "homepage.href=https://cron.tuxito.be"
+      - "homepage.description=Cron Job Management"
+      - "traefik.enable=true"
+      - "traefik.http.routers.cronmaster.rule=Host(`cron.tuxito.be`)"
+      - "traefik.http.routers.cronmaster.entrypoints=websecure"
+      - "traefik.http.routers.cronmaster.tls.certresolver=letsencrypt"
+      - "traefik.http.services.cronmaster.loadbalancer.server.port=3000"
+      - "traefik.docker.network=proxy"
+    env_file:
+      - /mnt/proxmox_swarm_data/env-files/cronmaster.env
+    volumes:
+      - /mnt/proxmox_swarm_data/tools/cronmaster/scripts:/app/scripts
+      - /mnt/proxmox_swarm_data/tools/cronmaster/data:/app/data
+      - /mnt/proxmox_swarm_data/tools/cronmaster/snippets:/app/snippets
+      - /mnt/proxmox_swarm_data/tools/cronmaster/ssh:/root/.ssh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proxy
+      - tools_internal
+
+  withoutbg:
+    image: withoutbg/app:latest
+    restart: on-failure:5
+    labels:
+      - "homepage.group=Tools"
+      - "homepage.name=WithoutBG"
+      - "homepage.icon=synology-photo-station.png"
+      - "homepage.href=https://withoutbg.tuxito.be"
+      - "homepage.description=Background Removal Tool"
+      - "traefik.enable=true"
+      - "traefik.http.routers.withoutbg.rule=Host(`withoutbg.tuxito.be`)"
+      - "traefik.http.routers.withoutbg.entrypoints=websecure"
+      - "traefik.http.routers.withoutbg.tls.certresolver=letsencrypt"
+      - "traefik.http.services.withoutbg.loadbalancer.server.port=80"
+      - "traefik.docker.network=proxy"
+    healthcheck:
+      test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/80' || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
+  tools_internal:
+    driver: bridge
+

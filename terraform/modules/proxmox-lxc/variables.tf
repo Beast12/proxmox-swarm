@@ -85,3 +85,16 @@ variable "nfs_mounts" {
   }))
   default = []
 }
+
+# Host bind mounts exposed inside the container.
+# `volume` is a host path on the Proxmox node.
+variable "bind_mounts" {
+  description = "Host bind mounts to attach into the container"
+  type = list(object({
+    volume    = string
+    path      = string
+    read_only = bool
+    shared    = bool
+  }))
+  default = []
+}

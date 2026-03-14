@@ -1,6 +1,9 @@
 # Plex Ansible Role
 
-Installs Docker + Docker Compose plugin on the Plex LXC and deploys Plex using a compose file.
+Installs Plex Media Server as a native package (`plexmediaserver`) on the Plex LXC.
+
+The role installs from Plex's official download API (`https://plex.tv/api/downloads/5.json`) and
+installs the `.deb` directly, avoiding apt repository signature issues.
 
 ## Files
 
@@ -14,6 +17,19 @@ Installs Docker + Docker Compose plugin on the Plex LXC and deploys Plex using a
 ansible-playbook -i ansible/plex/inventory.yml ansible/plex/playbook.yml
 ```
 
+## Proxmox Host Bind Mount Strategy (recommended when LXC NFS is blocked)
+
+This repo includes a dedicated playbook that:
+
+1. mounts NAS shares on the Proxmox host
+2. applies `pct set -mpX` bind mounts into Plex LXC
+
+Run:
+
+```bash
+ansible-playbook -i ansible/plex/proxmox-bind-inventory.yml ansible/plex/proxmox-bind-playbook.yml
+```
+
 ## Defaults
 
 Important role defaults are in:
@@ -22,9 +38,9 @@ Important role defaults are in:
 
 Notable variables:
 
+- `plex_data_dir` (default `/mnt/proxmox_swarm_data/plex`)
 - `plex_enable_hw_transcode` (default `false`)
-- `plex_config_dir` (default `/mnt/proxmox_swarm_data/plex/config`)
-- `plex_env_file` (default `/mnt/proxmox_swarm_data/env-files/plex.env`)
+- `plex_deb_url_override` (optional pin to a specific `.deb` URL)
 
 If you pass through GPU to the LXC later, set:
 
@@ -32,4 +48,3 @@ If you pass through GPU to the LXC later, set:
 ansible-playbook -i ansible/plex/inventory.yml ansible/plex/playbook.yml \
   -e "plex_enable_hw_transcode=true"
 ```
-

@@ -48,6 +48,16 @@ resource "proxmox_virtual_environment_container" "this" {
     }
   }
 
+  dynamic "mount_point" {
+    for_each = var.bind_mounts
+    content {
+      volume    = mount_point.value.volume
+      path      = mount_point.value.path
+      read_only = mount_point.value.read_only
+      shared    = mount_point.value.shared
+    }
+  }
+
 }
 
 # ==============================================================================

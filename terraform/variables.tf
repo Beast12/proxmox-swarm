@@ -10,6 +10,20 @@ variable "proxmox_api_token" {
   description = "Proxmox API token"
   type        = string
   sensitive   = true
+  default     = ""
+}
+
+variable "proxmox_username" {
+  description = "Proxmox username (required for bind mounts; e.g. root@pam)"
+  type        = string
+  default     = ""
+}
+
+variable "proxmox_password" {
+  description = "Proxmox password for proxmox_username (required for bind mounts with root@pam)"
+  type        = string
+  sensitive   = true
+  default     = ""
 }
 
 variable "proxmox_insecure" {
@@ -218,6 +232,12 @@ variable "lxc_containers" {
       export  = string
       mount   = string
       options = optional(string, "defaults,_netdev,nofail")
+    })), [])
+    bind_mounts = optional(list(object({
+      volume    = string
+      path      = string
+      read_only = optional(bool, false)
+      shared    = optional(bool, true)
     })), [])
   }))
   default = {}

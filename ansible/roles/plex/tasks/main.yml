@@ -1,49 +1,101 @@
 ---
-- name: Install Docker prerequisites
+- name: Remove legacy Plex apt repository file (if present)
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/plexmediaserver.list
+    state: absent
+
+- name: Install Plex prerequisites
   ansible.builtin.apt:
     name:
       - ca-certificates
       - curl
-      - docker.io
-      - docker-compose-plugin
     state: present
     update_cache: yes
 
-- name: Enable and start Docker
+- name: Resolve Plex build target from architecture
+  ansible.builtin.set_fact:
+    plex_build_target: "{{ plex_linux_build_map[ansible_architecture] | default('linux-x86_64') }}"
+
+- name: Fetch Plex downloads metadata
+  ansible.builtin.uri:
+    url: "{{ plex_downloads_api_url }}"
+    method: GET
+    return_content: true
+  register: plex_downloads
+
+- name: Select Debian release info for this architecture
+  ansible.builtin.set_fact:
+    plex_release_info: >-
+      {{
+        (
+          plex_downloads.json.computer.Linux.releases
+          | selectattr('distro', 'equalto', 'debian')
+          | selectattr('build', 'equalto', plex_build_target)
+          | list
+          | first
+        )
+      }}
+
+- name: Fail if Plex release was not found
+  ansible.builtin.assert:
+    that:
+      - plex_release_info is defined
+      - plex_release_info.url is defined
+    fail_msg: "Could not resolve a Plex Debian package for build '{{ plex_build_target }}'"
+
+- name: Set final Plex package URL and checksum
+  ansible.builtin.set_fact:
+    plex_deb_url: "{{ plex_deb_url_override if plex_deb_url_override | length > 0 else plex_release_info.url }}"
+    plex_deb_checksum: "{{ plex_release_info.checksum if plex_deb_url_override | length == 0 else '' }}"
+
+- name: Download Plex Debian package
+  ansible.builtin.get_url:
+    url: "{{ plex_deb_url }}"
+    dest: /tmp/plexmediaserver.deb
+    mode: "0644"
+    checksum: "{{ ('sha1:' + plex_deb_checksum) if plex_deb_checksum | length > 0 else omit }}"
+
+- name: Install Plex Debian package
+  ansible.builtin.apt:
+    deb: /tmp/plexmediaserver.deb
+    state: present
+
+- name: Ensure Plex data directory exists
+  ansible.builtin.file:
+    path: "{{ plex_data_dir }}"
+    state: directory
+    owner: plex
+    group: plex
+    mode: "0755"
+
+- name: Configure Plex application support directory
+  ansible.builtin.lineinfile:
+    path: /etc/default/plexmediaserver
+    create: true
+    regexp: '^PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR='
+    line: 'PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR="{{ plex_data_dir }}"'
+  notify: restart plex
+
+- name: Add plex user to video group for HW transcoding
+  ansible.builtin.user:
+    name: plex
+    groups:
+      - video
+    append: true
+  when: plex_enable_hw_transcode
+  notify: restart plex
+
+- name: Add plex user to render group for HW transcoding
+  ansible.builtin.user:
+    name: plex
+    groups:
+      - render
+    append: true
+  when: plex_enable_hw_transcode
+  notify: restart plex
+
+- name: Ensure Plex service is enabled and running
   ansible.builtin.systemd:
-    name: docker
+    name: "{{ plex_service_name }}"
     enabled: yes
     state: started
-
-- name: Create Plex compose directory
-  ansible.builtin.file:
-    path: "{{ plex_compose_dir }}"
-    state: directory
-    owner: root
-    group: root
-    mode: "0755"
-
-- name: Create Plex config directory
-  ansible.builtin.file:
-    path: "{{ plex_config_dir }}"
-    state: directory
-    owner: root
-    group: root
-    mode: "0755"
-
-- name: Deploy Plex compose file
-  ansible.builtin.template:
-    src: plex-compose.yaml.j2
-    dest: "{{ plex_compose_dir }}/docker-compose.yaml"
-    owner: root
-    group: root
-    mode: "0644"
-  notify: deploy plex
-
-- name: Deploy/update Plex container
-  ansible.builtin.command: docker compose up -d
-  args:
-    chdir: "{{ plex_compose_dir }}"
-  register: plex_up
-  changed_when: "'Started' in plex_up.stdout or 'Recreated' in plex_up.stdout or 'Created' in plex_up.stdout"
-

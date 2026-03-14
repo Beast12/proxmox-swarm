@@ -300,7 +300,8 @@ module "lxc_containers" {
   ssh_public_keys = var.ssh_public_keys
   tags            = concat(local.tags_common, ["lxc"])
 
-  nfs_mounts = each.value.nfs_mounts
+  nfs_mounts  = each.value.nfs_mounts
+  bind_mounts = each.value.bind_mounts
 }
 
 # ==============================================================================

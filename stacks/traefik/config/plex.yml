@@ -1,0 +1,20 @@
+http:
+  routers:
+    plex:
+      rule: "Host(`plex.tuxito.be`)"
+      entryPoints:
+        - websecure
+      service: plex
+      tls:
+        certResolver: letsencrypt
+        domains:
+          - main: "tuxito.be"
+            sans:
+              - "*.tuxito.be"
+
+  services:
+    plex:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.107:32400"
+

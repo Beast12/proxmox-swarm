@@ -137,6 +137,7 @@ locals {
     "komodo",
     "monitoring",
     "music-assistant",
+    "plex",
     "portainer",
     "portainer-backups",
     "services",
